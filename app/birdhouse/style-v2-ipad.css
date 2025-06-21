@@ -1,0 +1,41 @@
+/*
+* define specific styles for different iPhones
+*/
+
+/* iPad Air  ----------------------------------------- */
+
+@media only screen and (device-width : 820px) and (device-height : 1180px) and (orientation : portrait) {
+}
+
+@media only screen and (device-width : 820px) and (device-height : 1180px) and (orientation : landscape) {
+}
+
+/* iPad ---------------------------------------------- */
+@media only screen and (device-width : 810px) and (device-height : 1080px) and (orientation : portrait) {
+}
+
+@media only screen and (device-width : 810px) and (device-height : 1080px) and (orientation : landscape) {
+}
+
+
+/* iPad 3 & 4 – Landscape ---------------------------- */
+@media only screen
+    and (min-device-width : 768px)
+    and (max-device-width : 1024px)
+    and (orientation : landscape)
+    and (-webkit-min-device-pixel-ratio: 2) {
+
+}
+
+/* iPad 3 & 4 – Portrait ----------------------------- */
+@media only screen
+    and (min-device-width : 768px)
+    and (max-device-width : 1024px)
+    and (orientation : portrait)
+    and (-webkit-min-device-pixel-ratio: 2) {
+
+}
+
+/* --------------------------------------------------- */
+
+

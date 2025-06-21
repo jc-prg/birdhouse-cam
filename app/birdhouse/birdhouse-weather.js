@@ -10,18 +10,17 @@
 *
 * @param (dict) data: data returned form server API for this view
 */
-function birdhouseWeather( data ) {
+function birdhouse_WEATHER( data ) {
     var settings        = app_data["SETTINGS"];
-    var admin_allowed   = app_data["STATUS"]["admin_allowed"];
     var status          = app_data["STATUS"];
 	var weather	        = data["WEATHER"];
 
     if (settings["localization"]["weather_active"] == false) {
-        setTextById(app_frame_content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
+        setTextById(app_frame.content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
         return;
     }
     if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"] || weather["info_status"]["running"] == "error") {
-        setTextById(app_frame_content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
+        setTextById(app_frame.content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
         console.warn("Error with weather data!")
         console.warn(weather);
         return;
@@ -58,7 +57,7 @@ function birdhouseWeather( data ) {
     current_weather += tab.row(lang("HUMIDITY")+":",    weather_today["humidity"] +"%");
     current_weather += tab.row(lang("WIND")+":",        weather_today["wind_speed"] + " km/h");
     current_weather += tab.row(lang("STATUS")+":",      weather_today["date"] + " " + weather_today["time"]);
-    // current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
+    //current_weather += tab.row(lang("PRESSURE")+":",    weather_today["pressure"] + " hPa");
     //current_weather += tab.row(lang("UV_INDEX")+":",    weather_today["uv_index"]);
     if (weather["info_module"]["provider_link_required"]) {
         current_weather += tab.row(lang("SOURCE")+":",  weather["info_module"]["provider_link"]);
@@ -150,20 +149,22 @@ function birdhouseWeather( data ) {
     chart        += "<br/>&nbsp;<br/>";
 
     Object.keys(weather_data).forEach(date=>{
+        chart   += "<div class='weather-3day-overview'>";
         chart   += "<b>" + date + "</b><br/>";
         chart   += "<center>" + birdhouseWeather_OverviewChart(weather_data[date], "key", false) + "</center>" ;
+        chart   += "</div>";
         });
 
     chart        += "<br/>&nbsp;<br/>";
     html_weather += birdhouse_OtherGroup( "chart", lang("WEATHER") + " (3 " + lang("DAYS") + ")", chart, true );
-    if (admin_allowed) {
+    if (app_admin_allowed) {
         html_weather += html;
         }
 
     var title = "<div id='status_error_WEATHER' style='float:left'><div id='black'></div></div>";
     title += "<center><h2>" + lang("WEATHER") + "&nbsp;&nbsp;&nbsp;&nbsp;</h2></center>";
-    setTextById(app_frame_header, title);
-	setTextById(app_frame_content, html_weather);
+    setTextById(app_frame.header, title);
+	setTextById(app_frame.content, html_weather);
 }
 
 /*

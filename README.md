@@ -1,14 +1,15 @@
-# Birdhouse Camera v1.3.0
+# Birdhouse Camera v1.8.1
 
-Raspberry Pi project to observe our birdhouse with two webcams: live stream, record images, 
+Raspberry Pi project to observe a birdhouse with one or two cameras: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
 app in English and German, ...
 
 1. [Impressions](#impressions)
-2. [Main Features](#main-features)
-3. [Birdhouse](#birdhouse)
-4. [Technology](#technology)
-5. [Installation](#installation)
+2. [Important note](#Important-note)
+3. [Crafting a Birdhouse](#crafting-a-birdhouse)
+4. [Used Technology](#used-technology)
+5. [Main Software Features](#main-software-features)
+6. [Installation](#installation)
    * [Getting sources](#getting-sources)
    * [Software installation](#software-installation)
    * [First run and device configuration](#first-run-and-device-configuration)
@@ -16,9 +17,10 @@ app in English and German, ...
    * [Accessing images via WebDAV](#Accessing-images-via-WebDAV)
    * [Optimizing system configuration](#optimizing-system-configuration)
    * [Sample proxy server configuration](#Sample-proxy-server-configuration)
-6. [Train bird detection](#Train-bird-detection)
-7. [Helping stuff](#helping-stuff)
-8. [Other sources](#other-sources)
+   * [Server performance recommendations](#server-performance-recommendations)
+7. [Train bird detection](#Train-bird-detection)
+8. [Helping stuff](#helping-stuff)
+9. [Other sources](#other-sources)
 
 
 
@@ -33,14 +35,47 @@ app in English and German, ...
 
 Find further impressions [here](info/impressions.md).
 
+## Important Note
 
-## Main Features
+Observing birds and their brood in a birdhouse can be very exciting and you'll learn a lot. But keep in mind that you 
+observe what happens in nature. That might include that chicks will not make it. This might be not for the faint of heart.
 
-* **Birdhouse web-app for Browser and SmartPhone** (English and German, optimized for iPhone)
+
+## Crafting a Birdhouse
+
+Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse. 
+If you want to use a camera without IR light include a small semi-transparent window, e.g., within the roof of the birdhouse.
+
+* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
+* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
+
+In addition, do some research to find out where in your environment the birdhouse is best hung.
+
+
+## Used Technology
+
+* IT Hardware
+  * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
+  * Micro SD with 64 GByte
+  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle, requires a semi-transparent window in the birdhouse to get enough light inside)
+  * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
+  * _optional:_ Small USB Microphone
+  * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
+  * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
+* Software
+  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
+  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
+  * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
+  * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
+
+## Main Software Features
+
+* **Birdhouse web-app for Browser and SmartPhone** (English and big parts in German)
 * **Watching live stream** with 1 or 2 cameras (RPi4 recommend for fluent stream) 
-  * _INSIDE_: Raspberry Pi camera with IR light  or USB camera that supports IR light 
+  * _INSIDE_: Raspberry Pi camera with IR light or USB camera that supports IR light 
   * _OUTSIDE_: USB webcam (optimal viewing angle dependens on distance between birdhouse and camera)
   * Light switch support, using the JQC3F relay, e.g., for an IR light inside the birdhouse
+  * View lowres of active camera in every other view 
 * **Continuously recording photos**
   * e.g. every 20 seconds from sunrise to 20:00 local time (configurable in the device settings)
   * Similarity detection, filter photos with movement in a defined area (visualize differences)
@@ -54,53 +89,32 @@ Find further impressions [here](info/impressions.md).
 * **Recording and streaming videos** (admin)
   * create mp4 video incl. audio, works with iOS devices
   * Create video from all pictures of the current day
-  * Trim videos
+  * Trim videos, select thumbnail (not on iOS)
 * **Recording and visualizing weather data**:
   * via internet for a defined location (python_weather OR [Open Meteo](https://open-meteo.com/))
   * from sensors connected to the Raspberry Pi (DHT11/DHT22)
   * GPS lookup for cities or addresses via GeoPy to set weather location
 * **Listening and recording audio stream** from microphone
-  * listening currently browser only (no iPhone)
+  * listening (currently browser only, not on iOS devices)
   * recording audio with video stream
 * **Detecting birds** (objects) via YOLOv11
-  * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json)
+  * Bird detection model in an early stage trained with [a few European singing birds](data/birds.json) (you easily can train and use your own model)
   * View with all detected birds and objects -> jump to other views filtered by bird
   * Filter by detected birds in archive and favorite view as well as for admins in complete view of current day
   * Batch detection for archive images - single day and multiple days incl. individual detection threshold (admin)
   * _Live detection is experimental and slow on RPi 4 (admin view)_
-  * _No label editing via app yet_
+* **Breeding Diary**
+  * Document breeding stages and special events (admin functionality)
+  * Calendar view and short info below the video stream
 * **Admin functionality** via app
-  * Deny recording and admin functionality for specific IP addresses (e.g. router or proxy, to deny for access from the internet) or use password to login as administrator
+  * Login as administrator to get access to the settings and additional functionality such as video recording or control access based on IP addresses (DENY, ALLOW)
   * Edit server settings (partly, other settings define in file .env)
-  * Edit device settings, reconnect devices (devices must be added via config file)
   * Edit camera and image settings (contrast, saturation, hue, brightness, ...)
-  * See amount of currently active streams
-  * Download archived data (hires, config-files, object detection as YOLOv11)
+  * Edit device settings, reconnect devices (devices must be added via config file)
+  * Allow or block open access for visitors (close birdhouse with a self defined message)
   * Statistics (streams & frame rates, viewing time, CPU usage & temperature, HDD usage, ...)
+  * Download archived data (hires, config-files, object detection as YOLOv11)
 * **Forwarding web-app** as entry point for one or more birdhouses using IPv6 addresses
-
-## Birdhouse
-
-Here are some options. Calculate with a little bit more space in the height for the camera inside the birdhouse.
-
-* German instructions: [NABU - Nistkästen selber bauen](https://www.nabu.de/tiere-und-pflanzen/voegel/helfen/nistkaesten/index.html)
-* English instructions: [Simple birdhouse](https://suncatcherstudio.com/birds/birdhouse-plans-simple/)
-
-## Technology
-
-* IT Hardware
-  * Raspberry Pi 4 (recommended for two cameras and/or object detection) or Raspberry Pi 3B+ (if only inside view)
-  * Micro SD with 64 GByte
-  * USB camera for outside view and/or inside view (recommendation for inside view: HBVCAM-F20216HD 92° viewing angle)
-  * _optional:_ PiCamera with IR for the inside view (wide-angle min. 100°)
-  * _optional:_ Small USB Microphone
-  * _optional:_ DHT11 / DHT22 Sensor (DHT22 if used for temperatures below 0 °C)
-  * _optional:_ JQC3F relay to switch on/off a camera light (e.g. IR light of the RPi camera)
-* Software
-  * Python 3, CV2, JSON, Flask, ffmpeg, ffmpeg-progress, PyAudio, YOLOv8
-  * python_weather, Weather by [Open-Meteo.com](https://open-meteo.com/), GeoPy
-  * HTML, CSS, JavaScript, [ChartJS](https://www.chartjs.org/)
-  * [jc://modules/](https://github.com/jc-prg/modules/), [jc://app-framework/](https://github.com/jc-prg/app-framework/)
 
 ## Installation
 
@@ -140,6 +154,7 @@ Depending on the needs there are three options available how to install and run 
 * [(2) Direct installation](#2-direct-installation) - complete installation of all components with a bigger effort but without the limitations of (1)
 * [(3) Hybrid installation](#3-hybrid-installation) - combination with less effort than (2) and without the limitations
   of (1), recommend if you want to use PiCamera and object detection
+* [(4) Update existing installation](#4-update-existing-installation) - update your existing installation
 
 #### (1) Docker based installation
 
@@ -207,8 +222,8 @@ Depending on the needs there are three options available how to install and run 
       # birdhouse-cam: start database, web-server, and videoserver
       @reboot     /usr/local/bin/docker-compose -f /<path_to_script>/docker-compose-hybrid.yml up -docker
       
-      # birdhouse-cam: start birdhouse server
-      @reboot     /usr/bin/python3 /<path_to_script>/server/server.py
+      # birdhouse-cam: start birdhouse server (use --rpi to delay starting on Raspberry Pi for a minute, required for correct time)
+      @reboot     /usr/bin/python3 /<path_to_script>/server/server.py --rpi
       
       # birdhouse-cam: start if restart has been requested 
       * * * * *   /usr/bin/python3 /<path_to_script>/server/server.py --check-if-start > /tmp/birdhouse-cam-cron 2>&1
@@ -246,6 +261,16 @@ _Note:_ This installation is not fully tested yet. Recommend are (1) and (2).
 5. Add lines to crontab to start on boot, see (2.7.i)
 6. Examine logging messages if there are any problems, see (1.6)
 
+#### (4) Update existing installation
+
+Use ```sudo git pull``` in the root directory to get the latest state of the software.
+If you're updating an existing installation it's highly recommend to back up you're current configuration and start with a fresh one:
+
+* Remove your server config [.env](.env) and create a new one from the file [sample.env](sample.env)
+* Remove your data and device configuration [data/config.json](data/config.json), when restarting the server a fresh one will be created.
+
+When created the new files, adapt the new config files to your needs. Check the log files for errors, e.g., using ```./watchlog```.
+
 ### First run and device configuration
 
 * Open your client (usually via http://your-hostname:8000/). 
@@ -263,7 +288,9 @@ Go to the settings and create a single node.
 
 ### Accessing images via WebDAV
 
-To access image and video files via WebDAV define credentials and port in the [.env](sample.env)-file and start docker container.
+To access image and video files via WebDAV define credentials and port in the [.env](sample.env)-file and start the 
+docker container as shown below. As administrator, you'll find a link in the settings and there in the "client and 
+server information" section.
 
   ```bash
   $ sudo docker-compose -f docker-compose-webdav.yml up -d
@@ -354,6 +381,26 @@ of your birdhouse server:
     ```
 * Open ```https://<your-external-server>/birdhouse/``` in your browser to get an easy link to your birdhouses
   using its IPv6 addresses.
+
+### Server performance recommendations
+
+Choose the server configuration based on your needs. Here are some recommendations and options how to improve the 
+performance.
+
+#### Tested configurations
+
+* **Raspberry Pi v3** (1 GB): 1 camera with ~5fps @ 1024x768, AV recording, no bird detection
+* **Raspberry Pi v4** (4 GB): 2 cameras with ~8fps @ 1024x768 + ~8fps @ 1280x720, AV recording, bird detection (YOLOv11) for one camera
+* **Raspberry Pi v5**: not tested yet, but should work even better :-)
+
+#### Ways to increase server performance
+
+* ensure all connected devices are up and running without error or deactivate them (e.g. microphone)
+* combine bird detection with similarity detection (detect only if image differs more than the defined threshold
+* reduce camera resolution
+* reduce maximum fps value for image recording
+* reduce time of image recording rhythm (default is 20 seconds)
+* use database mode COUCH instead of JSON or BOTH (see .env)
 
 ## Train bird detection
 

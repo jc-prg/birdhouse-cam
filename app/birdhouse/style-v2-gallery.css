@@ -1,0 +1,232 @@
+/*
+* define style of images and images in galleries, the following classes are defined here
+*
+* .image_group          - container for an image gallery
+* .image_container      - container for the image, additional icons and the description
+* .image_wrapper        - container for the image and its icons
+* .thumbnail_container  - container for the image (thumbnail)
+* .play_button          - icon placed in the center ontop of the image
+* .star                 - icon placed in the upper left corner ontop of the image
+* .recycle              - icon placed below the star icon
+*
+* gallery definition, in general here - details per device are possible, depending on the width of .frame_column.wide (e.g. in style-v2-iphone.css)
+*/
+
+
+/* IMAGE GROUP AND CONTAINER ---------------------- */
+
+.image_group {
+    display     : flex;
+    flex-wrap   : wrap;
+    gap         : 10px; /* space between items */
+    padding     : 5px; /* space between items */
+}
+
+/* Clear floats after each row of images */
+.image_group_XX::after {
+    content     : "";
+    display     : table;
+    clear       : both;             /* Ensures the float is cleared and the container has correct height */
+}
+
+/* Styling for each image container */
+.image_container {
+    flex: 0 0 calc(20% - 10px);     /* 4 per row with some gap */
+    box-sizing: border-box;
+
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.image_wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* Main image */
+.image_wrapper img:first-child {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Thumbnail container styling */
+.thumbnail_container {
+    text-align: center;      /* Center-align the text below the image */
+}
+
+/* Styling for images */
+.thumbnail_container img {
+    width: 100%;             /* Make images fill the container width */
+    height: auto;            /* Maintain aspect ratio */
+    display: block;          /* Remove bottom space/whitespace under images */
+    margin: 0 auto;          /* Center the image horizontally if needed */
+    border-radius: 3px;
+}
+
+/* Styling for image descriptions */
+.thumbnail_container br {
+    //display: none;           /* Hide <br> tag, assuming description text is on the next line */
+}
+
+.thumbnail_container p {
+    font-size: 14px;         /* Adjust font size for description */
+    color: #555;             /* Darker text color */
+    margin-top: 8px;         /* Add space between image and description */
+    text-align: center;      /* Center the description text */
+}
+
+
+/* THUMBNAIL IMAGES ------------------------------- */
+/* configuration of image / thumbnail sizes */
+
+.thumbnail {
+    width           : 137px;
+    min-height      : 80px;
+    margin-bottom   : 5px;
+    border          : 1px solid white;
+    cursor          : zoom-in;
+}
+
+.thumbnail_settings {
+    width           : 137px;
+    margin-bottom   : 5px;
+    border          : 1px solid white;
+    cursor          : auto;
+}
+
+.thumbnail.error {
+    display         : table-cell;
+    text-align      : center;
+    vertical-align  : middle;
+    color           : white;
+    border          : white 1px solid;
+    background      : #660000;
+    padding         : 5px;
+    width           : 127px;
+    height          : 140px;
+    font-weight     : bold;
+}
+
+
+/* BUTTONS AND ICONS ------------------------------ */
+
+/* Play button centered */
+.play_button {
+    position        : absolute;
+    top             : 50%;
+    left            : 50%;
+    transform       : translate(-50%, -50%); /* Perfectly centers the element */
+    z-index         : 60;
+
+    width           : 25%;
+    height          : auto;
+    max-width       : 40px;
+    max-height      : 40px;
+    opacity         : 0.5;
+    pointer-events  : none; /* So it doesn't interfere with clicks on the image */
+    cursor          : pointer;
+}
+
+/* Star icon in upper-left */
+.star {
+    position        : absolute;
+    top             : 7px;
+    left            : 5px;
+    z-index         : 60;
+
+    width           : 20px;
+    height          : 20px;
+    cursor          : pointer;
+}
+
+.recycle {
+    position        : absolute;
+    top             : 32px;
+    left            : 5px;
+    z-index         : 60;
+
+    width           : 20px;
+    height          : 20px;
+    cursor          : pointer;
+}
+
+.star_img {
+    width    : 20px;
+    height   : 20px;
+}
+
+.recycle_img {
+    width    : 20px;
+    height   : 20px;
+}
+
+.video_length {
+    position        : absolute;
+    bottom          : 8px;
+    right           : 5px;
+    z-index         : 60;
+    font-size       : 10px;
+    color           : white;
+    height          : 10px;
+}
+
+.checkbox {
+    position : relative;
+    top      : 10px;
+    left     : 10px;
+    width    : 20px;
+    height   : 20px;
+    z-index  : 62;
+    cursor   : pointer;
+}
+
+.checkbox_img {
+    width    : 20px;
+    height   : 20px;
+}
+
+
+/* IMAGE SIZE vs. SCREEN WIDTH--------------------- */
+
+@media (min-width: 1000px) {
+    .image_container {
+        flex: 0 0 calc(16.66666% - 11px); /* 6 per row */
+    }
+}
+
+@media (min-width: 1200px) {
+    .image_container {
+        flex: 0 0 calc(12.5% - 10px); /* 8 per row */
+    }
+}
+@media (min-width: 1400px) {
+    .image_container {
+        flex: 0 0 calc(10% - 10px); /* 10 per row */
+    }
+}
+
+@media (max-width: 800px) {
+    .image_container {
+        flex: 0 0 calc(25% - 10px); /* 3 per row */
+    }
+}
+
+@media (max-width: 420px) {
+    .image_container {
+        flex: 0 0 calc(33.33% - 10px); /* 3 per row */
+    }
+}
+
+@media (max-width: 370px) {
+    .image_container {
+        flex: 0 0 calc(50% - 10px); /* 2 per row */
+    }
+}
+
+@media (max-width: 310px) {
+    .image_container {
+        flex: 0 0 calc(100% - 2px); /* 1 per row */
+    }
+}
+

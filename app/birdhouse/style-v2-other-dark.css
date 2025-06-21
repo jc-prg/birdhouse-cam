@@ -1,0 +1,29 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    /* MODULES / JC-TOOLTIP ----------------------------- */
+
+    .jc_tooltip .jc_tooltiptext{
+         opacity          : 0.9;
+         background-color : #ffcc99;
+     }
+    .jc_tooltip .jc_triangle1 {
+         opacity          : 0.9;
+         border-bottom    : 10px solid #ffcc99;
+     }
+
+
+    /* MOVE UP BUTTON ---------------------------------- */
+
+    #move_up {
+        background    : #dddddd;
+        border        : 3px solid white;
+    }
+
+    #move_up_arrow {
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 10px solid black;
+    }
+}

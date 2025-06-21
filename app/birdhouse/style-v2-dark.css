@@ -1,0 +1,10 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    :root {
+        --bh-link: #dddd00;
+        --bh-link-visited: #aaaa00;
+        --bh-link-hover: #dddd00;
+    }
+}

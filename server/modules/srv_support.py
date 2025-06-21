@@ -4,7 +4,10 @@ import psutil
 import subprocess
 import os
 import gc
+import requests
 
+from requests.auth import HTTPBasicAuth
+from xml.etree import ElementTree
 from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 from modules.presets import *
@@ -13,6 +16,14 @@ from modules.presets import *
 class ServerHealthCheck(threading.Thread, BirdhouseClass):
 
     def __init__(self, config, server, maintain=False):
+        """
+        Constructor of the class
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to config handler
+            server (Any): streaming server handler
+            maintain (bool): info if maintenance mode, then load only minimum
+        """
         self.server = server
         self._shutdown_signal_file = "/tmp/birdhouse-cam-shutdown"
         self._wait_till_start = 60
@@ -22,7 +33,7 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self.thread_set_priority(5)
 
             self._initial = True
-            self._interval_check = 60 * 5
+            self._interval_check = 60 * 1
             self._min_live_time = 65
             self._thread_info = {}
             self._health_status = None
@@ -36,6 +47,10 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files = BirdhouseTEXT()
 
     def run(self):
+        """
+        loop to continuously check the status of all running threads, which are registered during their construction,
+        central way to shut down all running threads when shutdown was requested
+        """
         self.logging.info("Starting Server Health Check ...")
         count = 0
         last_update = time.time()
@@ -64,23 +79,36 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
                 self._thread_info = {}
                 for key in self.config.thread_status:
                     if self.config.thread_status[key]["thread"]:
-                        self._thread_info[key] = time.time() - self.config.thread_status[key]["status"]["health_signal"]
+                        self._thread_info[key] = {}
+                        self._thread_info[key]["time"] = time.time() - self.config.thread_status[key]["status"]["health_signal"]
+                        self._thread_info[key]["process"] = (self.config.thread_status[key]["status"]["processing"] or
+                                                             self.config.thread_status[key]["status"]["recording"])
 
                 if self._initial:
                     self._initial = False
                     self.logging.debug("... checking the following threads: " + str(self._thread_info.keys()))
 
+                warning = []
                 problem = []
                 for key in self._thread_info:
-                    if self._thread_info[key] > self._min_live_time:
-                        problem.append(key + " (" + str(round(self._thread_info[key], 1)) + "s)")
+                    if self._thread_info[key]["process"]:
+                        warning.append(key + " (process is running)")
+                    elif self._thread_info[key]["time"] > self._min_live_time:
+                        if isinstance(self._thread_info[key], float):
+                            problem.append(key + " (" + str(round(self._thread_info[key], 1)) + "s)")
+                        else:
+                            problem.append(key + "(" + str(self._thread_info[key]) + ")")
 
+                self._health_status = ""
+                if len(warning) > 0:
+                    self.logging.info("... some threads are processing at the moment.")
+                    self.logging.info("  -> " + ", ".join(problem))
+                    self._health_status += "PROCESSING: " + ", ".join(problem) + "<br/>"
                 if len(problem) > 0:
-                    self.logging.warning(
-                        "... not all threads are running as expected: ")
+                    self.logging.warning("... not all threads are running as expected: ")
                     self.logging.warning("  -> " + ", ".join(problem))
-                    self._health_status = "NOT RUNNING: " + ", ".join(problem)
-                else:
+                    self._health_status += "NOT RUNNING: " + ", ".join(problem) + "<br/>"
+                if len(warning) == 0 and len(problem) == 0:
                     self.logging.info("... OK.")
                     self._health_status = "OK"
 
@@ -104,11 +132,20 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
         self.logging.info("Stopped Server Health Check.")
 
     def status(self):
+        """
+        return health status
+
+        Returns:
+            str: health status inkl. a list of services, that are not running for a while
+        """
         return self._health_status
 
     def check_restart(self):
         """
         check if external shutdown signal has been set
+
+        Returns:
+            bool: True if REBOOT is requested (set in the signal file)
         """
         if os.path.exists(self._shutdown_signal_file):
             content = self._text_files.read(self._shutdown_signal_file)
@@ -170,6 +207,9 @@ class ServerHealthCheck(threading.Thread, BirdhouseClass):
             self._text_files.write(self._shutdown_signal_file, "")
 
     def check_thread_cpu_usage(self):
+        """
+        Checking CPU usage per thread and write it to the statistics
+        """
         self.logging.info("Checking CPU usage per thread ...")
         pid = os.getpid()
         process = psutil.Process(pid)
@@ -257,6 +297,12 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         self.relays = relay_handler
         self.main_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
         self.main_dir = birdhouse_main_directories["project"]
+        self.webdav_available = False
+        self.webdav = {
+                "port": birdhouse_env["webdav_port"],
+                "user": birdhouse_env["webdav_user"],
+                "pwd": birdhouse_env["webdav_pwd"],
+            }
 
         self.disk_usage_interval = 10 * 60
         self.disk_usage_cache = {}
@@ -282,6 +328,8 @@ class ServerInformation(threading.Thread, BirdhouseClass):
             self.read_device_status()
             self.read_available_devices()
 
+            self.webdav_available = self.check_webdav(self.webdav["port"], self.webdav["user"], self.webdav["pwd"])
+
             self._srv_info_time = round(time.time() - start_time, 2)
             self.config.set_processing_performance("server", "srv_support", start_time)
 
@@ -292,7 +340,7 @@ class ServerInformation(threading.Thread, BirdhouseClass):
 
     def read_memory_usage(self):
         """
-        Get data for current memory , to be requested via .get().
+        Read data for current memory and CPU usage, to be requested via .get().
         """
         system = {}
         try:
@@ -471,4 +519,74 @@ class ServerInformation(threading.Thread, BirdhouseClass):
         Get device data which are updated continuously in the background.
         """
         return self._device_status
+
+    def check_webdav(self, port, username, password):
+        """
+        Checks if the WebDAV server at the given URL contains 'videos' and 'images' directories.
+
+        Args:
+            port (str): The base WebDAV port (http://localhost:<port>/)
+            username (str): WebDAV username
+            password (str): WebDAV password
+        Returns:
+            bool: True if both 'videos' and 'images' directories exist, False otherwise
+        """
+        if not birdhouse_env["webdav_show"]:
+            return False
+
+        # internal webdav address, defined in docker-compose-webdav.yml
+        url = "http://192.168.202.100:80/"
+        # Ensure the URL ends with a slash
+        if not url.endswith('/'):
+            url += '/'
+
+        # WebDAV PROPFIND headers
+        headers = {
+            "Depth": "1",
+            "Content-Type": "application/xml"
+        }
+
+        # Minimal XML body to list directory contents
+        data = """<?xml version="1.0"?>
+        <D:propfind xmlns:D="DAV:">
+            <D:prop>
+                <D:displayname/>
+            </D:prop>
+        </D:propfind>
+        """
+
+        try:
+            response = requests.request(
+                method="PROPFIND",
+                url=url,
+                data=data,
+                headers=headers,
+                auth=HTTPBasicAuth(username, password)
+            )
+
+            if response.status_code not in (207, 200):
+                self.logging.error(f"WebDAV connection failed: HTTP {response.status_code}")
+                return False
+
+            # Parse XML to find directory names
+            tree = ElementTree.fromstring(response.content)
+            found_dirs = []
+
+            for response_element in tree.findall('{DAV:}response'):
+                href = response_element.find('{DAV:}href')
+                if href is not None:
+                    path = href.text.strip('/')
+                    dir_name = path.split('/')[-1]
+                    found_dirs.append(dir_name)
+
+            if "videos" in found_dirs and "images" in found_dirs:
+                self.logging.info("Webdav connection OK.")
+                return True
+            else:
+                self.logging.error("Required directories 'videos' and/or 'images' not found.")
+                return False
+
+        except Exception as e:
+            self.logging.error(f"Error connecting to WebDAV: {e}")
+            return False
 

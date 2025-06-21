@@ -1,0 +1,323 @@
+/* define colors */
+
+:root {
+  --diary-day-background: #cccccc;
+  --diary-header-background: #bbbbbb;
+  --diary-header-text: black;
+  --diary-header-text-stage: black;
+  --diary-milestone-background: white;
+  --diary-image-background: none;
+  --diary-today-background: #cdaaaa;
+  --diary-today-border: red;
+  --diary-calendar-month: #222266;
+  --diary-calendar-month-text: white;
+  --diary-calendar-weekday: #22228f;
+  --diary-calendar-weekday-text: white;
+  /*
+  --diary-type-0-color: #bbbbbb;
+  --diary-type-1-color: #81C784;
+  --diary-type-2-color: #4FC3F7;
+  --diary-type-3-color: #FFEB3B;
+  --diary-type-4-color: #FF972D;
+  --diary-type-5-color: #F06292;
+  --diary-type-6-color: #BA68C8;
+  --diary-type-7-color: #FF5252;
+*/
+  --diary-type-0-color: #bbbbbb;
+  --diary-type-1-color: #48D1CC;
+  --diary-type-2-color: #3CB371;
+  --diary-type-3-color: #9ACD32;
+  --diary-type-4-color: #FFEB3B;
+  --diary-type-5-color: #FF8C00;
+  --diary-type-6-color: #FF5252;
+  --diary-type-7-color: #FF00FF;
+}
+
+/* calendar elements ----------------------------------*/
+
+/* buttons */
+.nav-buttons {
+  margin-bottom: 20px;
+}
+
+.nav-buttons button {
+  padding: 8px 12px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+/* calendar elements */
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+}
+
+.calendar-month {
+  flex: 1;
+  min-width: 100%;
+}
+
+.calendar-legend {
+  margin: 6px;
+  margin-top: 30px;
+  min-width: 100%;
+}
+
+.legend-entry {
+  float: left;
+  margin: 4px;
+}
+
+@media (min-width: 1054px) {
+  .calendar-container {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+  .calendar-month {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 460px) {
+    .calendar-container {
+        padding: 0px;
+    }
+}
+/* months and days */
+
+.month {
+  box-sizing: border-box;
+  margin-top: 10px;
+}
+
+.month-name {
+  text-align: center;
+  font-weight: bold;
+  font-size: 20px;
+
+  background-color: var(--diary-calendar-month);
+  color: var(--diary-calendar-month-text);
+  border: 1px gray solid;
+  border-radius: 4px;
+
+  padding: 8px 0;
+  margin-bottom: 5px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekday {
+  background-color: var(--diary-calendar-weekday);
+  color: var(--diary-calendar-weekday-text);
+
+  text-align: center;
+  font-weight: bold;
+  height: 30px;
+  line-height: 30px;
+  border: 1px solid gray;
+}
+
+.week-row {
+  display: contents;
+}
+
+.day {
+  border: 1px solid gray;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 20px;
+  min-height: 70px;
+  font-size: 16px;
+}
+
+.day.today {
+    border: 1px solid var(--diary-today-border);
+    background-color: var(--diary-today-background);
+}
+
+/* inside elements ----------------------------------*/
+
+/* format header */
+strong {
+  background: var(--diary-header-background);
+  color: var(--diary-header-text);
+}
+
+.day > strong {
+  display: block;
+  height: auto;
+  width: 100%;
+
+  padding: 2px;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-bottom: 8px;
+
+  margin-bottom: 5px;
+  margin-right: 8px;
+}
+
+.brood-list {
+  width: 80%;
+  max-width: 500px;
+  padding: 8px;
+  border: 1px solid var(--diary-header-background);
+  border-radius: 6px;
+}
+
+.brood-info {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.stage {
+  height: auto;
+  max-height: 18px;
+  width: 100%;
+  border: 0px;
+  background-color: none;
+  padding-left: 3px;
+  overflow: hidden;
+}
+
+/* format entries */
+.day-entries {
+  margin: 2px;
+}
+
+.milestone {
+  height: 13px;
+  width:  13px;
+  border-radius: 7px;
+  float: left;
+  margin: 2px;
+  padding: 0px;
+
+  background-color: var(--diary-milestone-background);
+  border-color: var(--diary-milestone-background);
+
+  display: flex;
+  justify-content: center;  /* Horizontal alignment */
+  align-items: center;      /* Vertical alignment */
+
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* format diary icons */
+.diary-icon {
+  width: 100%;
+  height: 100%;
+  background-image: url('img/image_black.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: block;
+}
+
+.diary-icon.diary-archive       { background-image: url('img/image_black.png'); }
+.diary-icon.diary-video         { background-image: url('img/video_black.png'); }
+.diary-icon.diary-edit          { background-image: url('img/edit_black.png'); }
+.diary-icon.diary-add           { background-image: url('img/add_black.png'); }
+.diary-icon.diary-delete        { background-image: url('img/delete_black.png'); }
+.diary-icon.diary-info          { background-image: url('img/info_black.png'); }
+
+.diary-icon.diary-archive-white { background-image: url('img/image.png'); }
+.diary-icon.diary-video-white   { background-image: url('img/video.png'); }
+.diary-icon.diary-edit-white    { background-image: url('img/edit.png'); }
+.diary-icon.diary-add-white     { background-image: url('img/add.png'); }
+.diary-icon.diary-delete-white  { background-image: url('img/delete.png'); }
+.diary-icon.diary-info-white    { background-image: url('img/info.png'); }
+
+.diary-icon.diary-archive-black { background-image: url('img/image_black.png'); }
+.diary-icon.diary-video-black   { background-image: url('img/video_black.png'); }
+.diary-icon.diary-edit-black    { background-image: url('img/edit_black.png'); }
+.diary-icon.diary-add-black     { background-image: url('img/add_black.png'); }
+.diary-icon.diary-delete-black  { background-image: url('img/delete_black.png'); }
+
+/* format milestones */
+.stage.type-0               { background-color: var(--diary-type-0-color);   color: var(--diary-header-text-stage); }
+.milestone.type-0           { background-color: var(--diary-image-background); color: var(--diary-type-0-color);   border: 1px solid var(--diary-image-background);  margin: 2px; }
+.milestone.type-0.filled    { background-color: var(--diary-type-0-color); }
+
+.stage.type-1               { background-color: var(--diary-type-1-color);   color: var(--diary-header-text-stage); }
+.milestone.type-1           { background-color: var(--diary-milestone-background); color: var(--diary-type-1-color);   border: 1px solid var(--diary-type-1-color);  margin: 2px; }
+.milestone.type-1.filled    { background-color: var(--diary-type-1-color); }
+
+.stage.type-2               { background-color: var(--diary-type-2-color);   color: var(--diary-header-text-stage); }
+.milestone.type-2           { background-color: var(--diary-milestone-background); color: var(--diary-type-2-color);   border: 1px solid var(--diary-type-2-color);  margin: 2px; }
+.milestone.type-2.filled    { background-color: var(--diary-type-2-color); }
+
+.stage.type-3               { background-color: var(--diary-type-3-color);   color: var(--diary-header-text-stage); }
+.milestone.type-3           { background-color: var(--diary-milestone-background); color: var(--diary-type-3-color);   border: 1px solid var(--diary-type-3-color);  margin: 2px; }
+.milestone.type-3.filled    { background-color: var(--diary-type-3-color); }
+
+.stage.type-4               { background-color: var(--diary-type-4-color);   color: var(--diary-header-text-stage); }
+.milestone.type-4           { background-color: var(--diary-milestone-background); color: var(--diary-type-4-color);   border: 1px solid var(--diary-type-4-color);  margin: 2px; }
+.milestone.type-4.filled    { background-color: var(--diary-type-4-color); }
+
+.stage.type-5               { background-color: var(--diary-type-5-color);   color: var(--diary-header-text-stage); }
+.milestone.type-5           { background-color: var(--diary-milestone-background); color: var(--diary-type-5-color);   border: 1px solid var(--diary-type-5-color);  margin: 2px; }
+.milestone.type-5.filled    { background-color: var(--diary-type-5-color); }
+
+.stage.type-6               { background-color: var(--diary-type-6-color);   color: var(--diary-header-text-stage); }
+.milestone.type-6           { background-color: var(--diary-milestone-background); color: var(--diary-type-6-color);   border: 1px solid var(--diary-type-6-color);  margin: 2px; }
+.milestone.type-6.filled    { background-color: var(--diary-type-6-color); }
+
+.stage.type-7               { background-color: var(--diary-type-7-color);   color: var(--diary-header-text-stage); }
+.milestone.type-7           { background-color: var(--diary-milestone-background); color: var(--diary-type-7-color);   border: 1px solid var(--diary-type-7-color);  margin: 2px; }
+.milestone.type-7.filled    { background-color: var(--diary-type-7-color); }
+
+.milestone.in-text          { float: none; }
+.milestone.type-edit        { float:right; margin-right:8px; opacity: 40%; }
+.milestone.type-edit:hover  { opacity: 100%; }
+
+/* format edit icon depending on stage type */
+.type-1 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-1 .milestone.type-edit        { background-color: var(--diary-type-1-color); }
+
+.type-2 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-2 .milestone.type-edit        { background-color: var(--diary-type-2-color); }
+
+.type-3 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-3 .milestone.type-edit        { background-color: var(--diary-type-3-color); }
+
+.type-4 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-4 .milestone.type-edit        { background-color: var(--diary-type-4-color); }
+
+.type-5 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-5 .milestone.type-edit        { background-color: var(--diary-type-5-color); }
+
+.type-6 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-6 .milestone.type-edit        { background-color: var(--diary-type-6-color); }
+
+.type-7 .diary-icon.diary-add       { background-image: url('img/add_black.png'); }
+.type-7 .milestone.type-edit        { background-color:  var(--diary-type-7-color); }
+
+
+/* adjust sizes depending on screen size */
+
+@media (min-width: 1200px) {
+    .milestone          { margin: 3px; }
+}
+
+@media (min-width: 1000px) {
+    .milestone          { height: 16px; width: 16px; font-size: 12px; border-radius: 8px;}
+}
+
+@media (max-width: 420px) {
+    .day                { font-size: 14px;}
+}
+
+@media (max-width: 400px) {
+    .milestone          { height: 10px; width: 10px; border-radius: 5px; font-size: 8px; }
+}

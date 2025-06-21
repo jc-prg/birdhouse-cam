@@ -6,7 +6,18 @@
 
 /*
 * The following 4 functions are used to create a dialog to edit parameters of different types,
-* to validate the input and to hand it over to the API functions.
+* to validate the input and to hand it over to the API functions. This first one creates an input field.
+*
+* @param (string) id: unique id for input element
+* @param (string) field: field id to grab existing information from;
+                         option (1) data from app_data["SETTINGS"] - list all key names separated by ":"
+                         option (2) data from this field - format the value "this:<value>"
+* @param (string) type: type of input field, options are: input, select, select_dict, select_dict_sort, range, boolean
+* @param (Any) options: list of possible options for select types
+                        option (1) for select use a string with comma separated values
+                        option (2) for select_dict* use a dict = { "value": "description" }
+* @param (string) data_type: type of date for verification, options are: string, integer, boolean, float, json
+* @param (string) on_change: javascript command to be executed when value changes
 */
 function birdhouse_edit_field(id, field="", type="input", options="", data_type="string", on_change="") {
     var fields = field.split(":");
@@ -16,7 +27,10 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
     var style  = "";
     var step   = "1";
 
-    if (field != "") {
+    if (field != "" && fields[0] == "this") {
+        data = fields[1];
+        }
+    else if (field != "") {
         if (fields.length == 1)      { data = settings[fields[0]]; }
         else if (fields.length == 2) { data = settings[fields[0]][fields[1]]; }
         else if (fields.length == 3) { data = settings[fields[0]][fields[1]][fields[2]]; }
@@ -30,6 +44,11 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
 
     if (type == "input") {
         html += "<input id='"+id+"' value='"+data+"' style='"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
+        }
+    else if (type == "input_text") {
+        html += "<textarea id='"+id+"' style='min-height:35px;min-width:250px;"+style+"' onblur='birdhouse_edit_check_values(\""+id+"\",\""+data_type+"\");' onchange='"+on_change+"'>";
+        html += data;
+        html += "</textarea>";
         }
     else if (type == "select_dict" || type == "select_dict_sort") {
 
@@ -107,6 +126,25 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
         html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' onchange='"+on_value+"'>";
         html += "</div>";
         }
+    else if (type == "toggle") {
+        var on_set       = "document.getElementById(\""+id+"\").value = document.getElementById(\""+id+"_\"+this.value).innerHTML;";
+        on_set          += "this.className=\"bh-slider set\";";
+        var toggle_data  = "";
+        var toggle_color = "undef";
+        var range        = options.split(":");
+
+        if (data == "false" || data == false)           { toggle_data = 0; toggle_color = "off"; }
+        else if (data == "true" || data == true)        { toggle_data = 1; toggle_color = "on"; }
+        else                                            { toggle_data = data; }
+
+        html += "<div class='bh-slidecontainer' style='float:left;width:60px;height:auto;margin-bottom:5px;'>";
+        html += "<input id='"+id+"_range' class='bh-slider "+toggle_color+"' type='range' name='' min='0' max='1' step='1' value='"+toggle_data+"' style='width:50px;' onchange='"+on_set+on_change+"'>";
+        html += "<div style='display:none;'><div id='"+id+"_0'>" + range[0] + "</div><div id='"+id+"_1'>" + range[1] + "</div></div>";
+
+        html += "</div><div style='float:left;margin-left:12px;display:none;'>";
+        html += "<input id='"+id+"' class='bh-slider-value' style='width:30px;' value='"+data+"' disabled>";
+        html += "</div>";
+        }
     else if (type == "range") {
         on_value  = "document.getElementById(\""+id+"_range\").value = this.value;";
         on_set    = "document.getElementById(\""+id+"\").value = this.value;";
@@ -134,12 +172,26 @@ function birdhouse_edit_field(id, field="", type="input", options="", data_type=
     return html;
 }
 
+/*
+* create a button to save all fields defined in an id list
+*
+* @param (string) id: id for the button element
+* @param (string) id_list: ":" separated list of field ids with values to be saved
+* @param (string) camera: camera id
+* @param (string) text: not used yet
+*/
 function birdhouse_edit_save(id, id_list, camera="", text="") {
     var ids = id_list.split(":");
-    var html = "<button onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
+    var html = "<button id='"+id+"' onclick='birdhouse_edit_send(\""+id_list+"\", \""+camera+"\");' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
     return html;
 }
 
+/*
+* validate if the input field with the given id contains content of a specific content type
+*
+* @param (string) id: id of field to be checked
+* @param (string) data_type: expected date type - options are: string, integer, boolean, float, json
+*/
 function birdhouse_edit_check_values(id, data_type) {
     if (!document.getElementById(id)) {
         console.error("Element '"+id+"' doesn't exist!");
@@ -161,7 +213,6 @@ function birdhouse_edit_check_values(id, data_type) {
         }
     }
     if (data_type == "float") {
-        console.log(parseFloat(value));
         if (isNaN(parseFloat(value))) {
             error = true;
             error_msg += id.toUpperCase() + " isn't a float number.\n";
@@ -184,6 +235,12 @@ function birdhouse_edit_check_values(id, data_type) {
     return [error, error_msg ];
 }
 
+/*
+* collect all data and handover to an API request to save all data from the fields in the id_list
+*
+* @param (string) id_list: ":" separated list of field ids with values to be saved
+* @param (string) camera: camera id
+*/
 function birdhouse_edit_send(id_list, camera) {
     var ids = id_list.split(":");
     var info = "";
@@ -249,27 +306,32 @@ function birdhouse_view_images_threshold(threshold) {
     group_list = document.getElementById("group_list").innerHTML.split(" ");
     image_list = [];
     image_list_active = [];
+    image_list_inactive = [];
     for (var i=0;i<group_list.length;i++) {
-        image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
-        image_list = image_list.concat(image_ids_in_group);
-        for (a=0;a<image_ids_in_group.length;a++) {
-            if (image_list[a] != "") {
-                image_threshold = document.getElementById(image_ids_in_group[a]+"_similarity");
-                image_container = image_ids_in_group[a] + "_container";
-                if (image_threshold && image_threshold.value+0 <= threshold+0) {
-                    image_list_active.push(image_ids_in_group[a]);
-                    elementVisible(image_container);
-                }
-                else {
-                    elementHidden(image_container);
+        if (document.getElementById("group_ids_"+group_list[i])) {
+            image_ids_in_group = document.getElementById("group_ids_"+group_list[i]).innerHTML.split(" ");
+            image_list = image_list.concat(image_ids_in_group);
+            for (a=0;a<image_ids_in_group.length;a++) {
+                if (image_list[a] != "") {
+                    image_threshold = document.getElementById(image_ids_in_group[a]+"_similarity");
+                    image_container = image_ids_in_group[a] + "_container";
+                    if (image_threshold && image_threshold.value+0 <= threshold+0) {
+                        image_list_active.push(image_ids_in_group[a]);
+                        elementVisible(image_container);
+                    }
+                    else if (image_container.indexOf("_FAV") < 0) {
+                        image_list_inactive.push(image_ids_in_group[a]);
+                        elementHidden(image_container);
+                    }
                 }
             }
         }
+        if (threshold == 100)  { setTextById("threshold-info", "Total: " + image_list_active.length + " images"); }
+        else                   { setTextById("threshold-info", "Try: " + image_list_active.length + " selected images"); }
     }
 
-    console.log("info_set_threshold: THRESHOLD=" + threshold + "%, FOUND=" + image_list_active.length + ", TOTAL=" + image_list.length)
-    setTextById("info_set_threshold", "Threshold = " + threshold + "%: " + image_list_active.length + " of " + image_list.length + " selected.")
-    //alert("birdhouse_view_images_threshold: threshold=" + threshold + "; all=" + image_list.length + "; select=" + image_list_active.length);
+    console.log("info_set_threshold: THRESHOLD=" + threshold + "%, FOUND=" + image_list_active.length + ", TOTAL=" + image_list.length + ", GROUPS=" + group_list.length);
+    setTextById("info_set_threshold", "Threshold = " + threshold + "%: " + image_list_active.length + " of " + image_list.length + " selected.");
 }
 
 /*
@@ -279,13 +341,14 @@ function birdhouse_view_images_threshold(threshold) {
 function birdhouse_view_images_objects(object) {
 
     if (!document.getElementById("group_list")) { return; }
-    group_list = document.getElementById("group_list").innerHTML.split(" ");
-    image_list = [];
+    group_list += " TODAY_FAVORITE";
+    group_list  = document.getElementById("group_list").innerHTML.split(" ");
+    image_list  = [];
     image_list_active = [];
 
     var prefix = "";
-    if (app_active_page == "FAVORITES")      { prefix = "FAVORITES_"; }
-    if (app_active_page == "TODAY_COMPLETE") { prefix = "TODAY_COMPLETE_"; }
+    if (app_active.page == "FAVORITES")      { prefix = "FAVORITES_"; }
+    if (app_active.page == "TODAY_COMPLETE") { prefix = "TODAY_COMPLETE_"; }
 
     for (var i=0;i<group_list.length;i++) {
         image_ids_in_group = document.getElementById("group_ids_"+prefix+group_list[i]).innerHTML.split(" ");
@@ -298,23 +361,27 @@ function birdhouse_view_images_objects(object) {
     for (a=0;a<image_list.length;a++) {
         if (image_list[a] != "") {
             image_objects = document.getElementById(image_list[a]+"_objects");
-            image_container = image_list[a] + "_container";
+            image_container     = image_list[a] + "_container";
+            image_container_fav = image_list[a] + "_FAV_container";
             if (object == "EMPTY" && image_objects != undefined && image_objects.value.indexOf(",") < 0) {
                 image_list_active.push(image_list[a]);
                 elementVisible(image_container);
+                elementVisible(image_container_fav);
                 }
             else if ((image_objects && image_objects.value && image_objects.value.indexOf(object) >= 0) || (object == "")) {
                 image_list_active.push(image_list[a]);
                 elementVisible(image_container);
+                elementVisible(image_container_fav);
             }
             else {
                 elementHidden(image_container);
+                elementHidden(image_container_fav);
             }
         }
 
     }
 
-    console.log("birdhouse_view_images_objects: OBJECT=" + object + ", FOUND=" + image_list_active.length  + ", TOTAL=" + image_list.length);
+    console.debug("birdhouse_view_images_objects: OBJECT=" + object + ", FOUND=" + image_list_active.length  + ", TOTAL=" + image_list.length);
 }
 
 
@@ -325,12 +392,12 @@ function birdhouse_frameHeader(title, status_id="") {
     if (status_id != "") {
         title = "<div id='"+status_id+"' style='float:left;'><div id='black'></div></div>" + title;
     }
-    setTextById(app_frame_header, "<center><h2>" + title + "</h2></center>");
+    setTextById(app_frame.header, "<center><h2>" + title + "</h2></center>");
 }
 
 function birdhouse_frameFooter(content) {
 
-    setTextById(app_frame_index, "<center>" + content + "</center>");
+    setTextById(app_frame.index, "<center>" + content + "</center>");
 }
 
 /*
@@ -402,7 +469,7 @@ function birdhouse_Links(link_list) {
 	var keys = Object.keys(link_list);
 	for (var i=0;i<keys.length;i++) { if (keys[i] != "active_cam") {
 		var key     = keys[i];
-		var onclick = "birdhousePrint_load(view=\""+link_list[key]["link"]+"\", camera=\""+app_active_cam+"\");";
+		var onclick = "birdhousePrint_print(page=\""+link_list[key]["link"]+"\", cam=\""+app_active.cam+"\");";
 		html += "<a style='cursor:pointer;' onclick='"+onclick+"'>"+lang(link_list[key]["link"])+"</a> ";
 		if (i+1 < keys.length) { html += " | "; }
 		} }
@@ -431,26 +498,50 @@ function iOS() {
 * Show / hide video editing overlay (toggle depending on current status)
 */
 function toggleVideoEdit() {
+
         video_edit1 = document.getElementById("camera_video_edit");
         video_edit2 = document.getElementById("camera_video_edit_overlay");
         if (video_edit1 != null) {
         	if (video_edit1.style.display == "none") {
         		video_edit1.style.display = "block"; 
         		video_edit2.style.display = "block"; 
+                videoSetVars();
         		}
         	else {
         		video_edit1.style.display = "none"; 
         		video_edit2.style.display = "none";
 
-               var video = document.getElementById("video");
-               if (video != undefined) { video.pause(); }
-        		}
+                var video = document.getElementById("video");
+                if (video != undefined) { video.pause(); }
+                videoRemoveEventListeners();
+        	    }
         	}
 	else {
 	        console.error("toggleVideoEdit: Video edit doesn't exist.");
 		}
 	}
 
+/*
+* get URL parameters
+*
+* @params (string) url: url to identify parameters from
+*/
+function getUrlParams(analyze_url) {
+    const url = new URL(analyze_url);
+
+    // Get query parameters from the URL
+    const params = new URLSearchParams(url.search);
+
+    // Create an empty object to store the parameters
+    let paramDict = {};
+
+    // Loop through each parameter and add it to the object
+    params.forEach((value, key) => {
+        paramDict[key] = value;
+        });
+
+    return paramDict;
+    }
 
 //-----------------------------------------
 

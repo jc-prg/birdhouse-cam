@@ -14,8 +14,10 @@ var birdhouse_STATISTICS_labels = {"day": [], "charts": ["overview"]}
 * @param (string) title: title to be displayed
 * @param (dict) data: API response for list specific request
 */
-function birdhouse_STATISTICS(title, data) {
+function birdhouse_STATISTICS(data) {
+
     birdhouse_STATISTICS_cache = data;
+
     var link        = "";
     var date        = birdhouse_STATISTICS_day_1;
     var statistics  = data["DATA"]["data"]["entries"][date];
@@ -102,11 +104,11 @@ function birdhouse_STATISTICS_click(chart_id, select="", date="") {
 */
 function birdhouse_printStatistic(title, data, date, chart_type="all", groups=true, id=0) {
 	var html          = "";
-	var admin         = data["STATUS"]["admin_allowed"];
 	var statistics    = data["DATA"]["data"]["entries"][date];
-	var camera_status = data["STATUS"]["devices"]["cameras"];
-	var open_category = [];
+	var camera_status = app_data["STATUS"]["devices"]["cameras"];
 	var system_data   = app_data["STATUS"]["system"];
+	var open_category = [];
+
 	var tab           = new birdhouse_table();
 	tab.style_cells["vertical-align"]   = "top";
 	tab.style_cells["padding"]          = "3px";
@@ -147,13 +149,13 @@ function birdhouse_printStatistic(title, data, date, chart_type="all", groups=tr
                                           set_colors=chartJS_hddPieChart,
                                           set_menu="right");
 
-        var info  = "<br/>&nbsp;<br/>";
-        info += "Max parallel streams: " + statistics["streams"]["info"]["max"] + "<br/>&nbsp;<br/>";
-        info += "Total viewing time: " + statistics["streams"]["info"]["views"] + "min<br/>&nbsp;";
+        var info  = "";
+        info += "Date:<br/><b><big>" + date + "</big></b><br/>&nbsp;<br/>";
+        info += "Max parallel streams:<br/><b><big>" + statistics["streams"]["info"]["max"] + "</big></b><br/>&nbsp;<br/>";
+        info += "Total viewing time:<br/><b><big>" + convert_second2time(Math.round(statistics["streams"]["info"]["views"])) + "</big></b><br/>&nbsp;";
 
-        var html_entry = tab.start();
-        html_entry    += tab.row(chart, info);
-        html_entry    += tab.end();
+        var html_entry = "<div><div style='float:left;padding:5px;'>" + chart + "</div>";
+        html_entry    += "<div style='float:left;padding:5px;'>" + info + "</div></div>";
 
         if (groups) { html  += birdhouse_OtherGroup( "chart_hdd_pie", lang("TODAY") + " HDD Usage", html_entry, true ); }
         else        { html  += html_entry; }

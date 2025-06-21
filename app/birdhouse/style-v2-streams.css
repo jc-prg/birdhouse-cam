@@ -1,0 +1,210 @@
+/*
+* define style for views
+*/
+
+
+/* AUDIO STREAMS ---------------------------------- */
+
+.audiostream_bird_container {
+    float: left;
+    width: 60px;
+    height: 60px;
+    text-align: left;
+    margin: 5px;
+}
+
+.audiostream_bird_image {
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    position: relative;
+    top: -15px;
+}
+
+.audiostream_bird_info {
+    cursor: pointer;
+    position: relative;
+    top: -38px;
+    right: -40px;
+    color: #888888;
+    font-size: 10px;
+}
+
+
+/* VIDEO STREAM WRAPPER --------------------------- */
+
+.streams_wrapper {
+  width: 95%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  //border: 1px solid blue;
+  padding: 5px;
+}
+
+.streams_index_overlay {
+  position: relative;
+  display: inline-block;
+  //border: 1px solid red;
+}
+
+.streams_index_main {
+  max-width: 100%;
+  max-height: calc(100vh - 270px);
+  min-height: 250px;
+  min-width: 200px;
+  height: auto;
+  width: auto;
+  object-fit: contain;
+  border: 1px solid white;
+  border-radius: 3px;
+  display: block;
+  position: relative; /* or omit this; not absolutely positioned */
+}
+
+.streams_index_second {
+  position: absolute;
+  //top: 10px;
+  //left: 10px;
+  width: 25%;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid white;
+  border-radius: 3px;
+}
+
+.streams_index_second.upper_left  { top: 6%; left: 3%; }
+.streams_index_second.upper_right { top: 6%; right: 3%; }
+.streams_index_second.lower_left  { bottom: 3%; left: 3%; }
+.streams_index_second.lower_right { bottom: 3%; right: 3%; }
+
+
+/* VIDEO STREAMS ---------------------------------- */
+
+.fullscreen-button-container {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    padding: 10px;
+    padding-right: 5px;
+}
+
+.fullscreen-button-container.lower_right {
+    top: 0px;
+    right: 0px;
+}
+
+#fullscreen-button-index {
+    object-fit: contain;
+    opacity: 30%;
+}
+#fullscreen-button-index:hover {
+    opacity: 100%;
+}
+
+
+/* VIDEO STREAMS ---------------------------------- */
+/* configuration of streaming HTML elements */
+
+.livestream_main_container {
+    position     : relative;
+    width        : 100%;
+    z-index      : 60;
+/*    border       : 1px solid green;  */
+}
+
+.livestream_main {
+    max-width    : 280px;
+    max-height   : 90vh;
+    transform    : scale(0.98);
+    border       : 1px solid white;
+}
+
+.livestream_2nd_container {
+    position     : relative;
+    width        : 25%;
+    height       : 25%;
+    z-index      : 61;
+/*    border : 1px solid red;  */
+}
+
+.livestream_2nd {
+    max-width    : 25vw;
+    max-height   : 25vh;
+    transform    : scale(1.0);
+    border       : 1px solid white;
+}
+
+/* one live stream with cam1 */
+
+.livestream_main_container.cam1     { top    :   20px; }
+.livestream_2nd_container.cam1      {}
+
+/* two live streams with cam1 as main stream */
+
+.livestream_main_container.cam1cam2 { top :   -70px; }
+.livestream_2nd_container.cam1cam2  { top :     5px;  left : +25vw; }
+
+/* FLOATING LOWRES VIDEO STREAM ---------------------------------- */
+
+.floating-window {
+    position            : fixed;
+    right               : 20px;
+    bottom              : 100px;
+    border-radius       : 8px;
+    border              : 1px solid var(--frames-border);
+    //box-shadow          : 0 7px 7px -3px var(--frames-shadow);
+    box-shadow          : 0 10px 15px -3px var(--frames-shadow), 0 4px 6px -4px var(--frames-shadow) ;
+    overflow            : hidden;
+    background-color    : var(--app-frame-background);
+    z-index             : 8000;
+    display             : none;
+    flex-direction      : column;
+}
+
+.floating-header {
+    font-family         : var(--app-default-font);
+    background-color    : var(--app-frame-background);
+    border-bottom       : 1px solid var(--frame-border);
+    color               : var(--app-frame-text);
+    padding             : 6px 6px;
+    cursor              : move;
+    display             : flex;
+    justify-content     : space-between;
+    align-items         : center;
+    font-size           : 10px;
+}
+
+.floating-header .close-btn {
+    cursor              : pointer;
+    font-weight         : bold;
+    color               : var(app-frame-text);
+}
+
+.floating-image-container {
+    display             : flex;
+    align-items         : center;
+    justify-content     : center;
+    overflow            : hidden;
+}
+
+.floating-image-container img {
+    max-height          : 150%;
+    max-width           : 150%;
+    height              : 150%;
+    width               : 150%;
+    display             : block;
+    object-fit          : contain;
+    border-radius       : 0 0 8px 8px;
+    opacity             : 100%;
+}
+
+.floating-window::after {
+    content             : "";
+    position            : absolute;
+    width               : 16px;
+    height              : 16px;
+    right               : 0;
+    bottom              : 0;
+    background          : transparent;
+}

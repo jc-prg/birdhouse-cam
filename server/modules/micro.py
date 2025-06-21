@@ -39,6 +39,9 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.first_micro = first_micro
         self.is_reconnect = False
 
+        self._recording = False
+        self._processing = False
+
         self.recording = False
         self.recording_start = False
         self.recording_processing = False
@@ -48,6 +51,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                                                    birdhouse_directories["audio_temp"])
         self.recording_default_filename = "recording_" + self.id + ".wav"
         self.recording_frames = []
+        self.recording_timestamp = []
         self.record_start_time = None
 
         self.last_active = time.time()
@@ -77,12 +81,11 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("Start microphone handler for '" + self.id + "' ...")
         self.connect()
         self.count = 0
+        self.last_active = time.time()
+        local_start_time = 0
+        chunk_interval = 0
 
         while self._running:
-            self.logging.debug("Micro thread '" + self.id +
-                               "' - connected=" + str(self.connected) +
-                               " - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
-                               str(round(self.timeout, 2)) + "s - pause=" + str(self._paused) + " - (" + str(self.count) + ")")
 
             if self.recording_processing_start:
                 self.logging.debug("Request to stop recording for '" + self.id + "' ...")
@@ -94,7 +97,15 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
             if self.recording_processing:
                 self.record_process()
 
+            self._recording = self.recording
+            self._processing = self.recording_processing
+
             if not self.recording:
+                self.logging.debug("Micro thread '" + self.id +
+                                   "' - connected=" + str(self.connected) +
+                                   " - last_active=" + str(round(time.time() - self.last_active, 2)) + "s; timeout=" +
+                                   str(round(self.timeout, 2)) + "s - pause=" + str(self._paused) + " - (" + str(self.count) + ")")
+
                 # Pause if not used for a while
                 if time.time() - self.last_active > self.timeout:
                     self._paused = True
@@ -115,27 +126,41 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                     self.connect()
                     self.config.update["micro_" + self.id] = False
 
+            elif self.recording and local_start_time == 0:
+                local_start_time = time.time()
+                chunk_interval = self.CHUNK / self.RATE
+
             # read data from device and store in a var
             if self.connected and not self.error and not self._paused:
                 try:
-                    self.chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
-                    self.logging.debug("Read chunk of '" + self.id + "' (" + str(len(self.chunk)) + ") ...")
-                    if len(self.chunk) > 0:
+                    this_chunk = self.stream.read(self.CHUNK, exception_on_overflow=False)
+                    self.logging.debug("Read chunk of '" + self.id + "' (set:" + str(self.CHUNK) + "/read:" + str(len(this_chunk)) + ") ...")
+                    if len(this_chunk) > 0:
                         self.count += 1
+                        self.chunk = this_chunk
                         if self.recording:
-                            self.recording_frames.append(self.chunk)
+                            self.recording_frames.append(this_chunk)
+                            self.recording_timestamp.append(time.time())
+                            self.last_active = time.time()
+                    elif self.recording:
+                        self.logging.info("---> got empty chunk")
 
                 except Exception as err:
-                    self.logging.debug("Could not read chunk: " + str(err))
+                    self.logging.info("---> Could not read chunk: " + str(err))
                     self.raise_error("Could not read chunk: " + str(err))
                     self.recording = False
                     self.count = 0
 
             else:
                 self.count = 0
-                time.sleep(0.1)
+                self.thread_wait()
 
-            if not self.recording:
+            if self.recording:
+                elapsed_time = time.time() - local_start_time
+                expected_time = len(self.recording_frames) * chunk_interval
+                if elapsed_time < expected_time:
+                    time.sleep(expected_time - elapsed_time)
+            else:
                 self.thread_control()
 
         try:
@@ -143,7 +168,6 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
                 if not self.stream.is_stopped():
                     self.stream.stop_stream()
                 self.stream.close()
-
         except Exception as e:
             self.logging.error("Could not stop stream: " + str(e))
 
@@ -159,13 +183,12 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.logging.info("AUDIO device " + self.id + " (" + str(self.param["device_id"]) + "; " +
                           self.param["device_name"] + "; " + str(self.param["sample_rate"]) + ")")
 
-        self.CHUNK = self.CHUNK_default
         self.DEVICE = int(self.param["device_id"])
 
         if "sample_rate" in self.param:
             self.RATE = self.param["sample_rate"]
         if "chunk_size" in self.param:
-            self.CHUNK = self.CHUNK * self.param["chunk_size"]
+            self.CHUNK = self.CHUNK_default * self.param["chunk_size"]
         if "channels" in self.param:
             self.CHANNELS = self.param["channels"]
 
@@ -390,6 +413,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.last_active = time.time()
         self.record_start_time = time.time()
         self.recording_frames = []
+        self.recording_timestamp = []
         self.recording_filename = os.path.join(str(self.recording_default_path), filename)
         self.recording_start = True
         self.config.record_audio_info = {
@@ -415,9 +439,14 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.last_active = time.time()
         self.restart_stream = False
 
+        if not self.record_start_time:
+            self.record_start_time = time.time()
+            self.logging.error("Audio recording start time not defined (any more), couldn't calculate duration.")
+
         duration = time.time() - self.record_start_time
         samples = len(self.recording_frames) * self.CHUNK
         sample_rate = round(samples / duration, 1)
+        self.config.record_audio_info["audio_fps"] = self.recording_timestamp
 
         self.logging.info("Stopping recording of '" + self.recording_filename + "' ...")
         self.logging.debug(" --> Chunks: " + str(len(self.recording_frames)) + " | length: " + str(round(duration,1)) + "s")
@@ -435,6 +464,7 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.recording = False
         self.recording_processing = False
         self.recording_frames = []
+        self.recording_timestamp = []
         self.recording_filename = ""
         self.record_start_time = None
 
@@ -457,19 +487,27 @@ class BirdhouseMicrophone(threading.Thread, BirdhouseClass):
         self.config.record_audio_info["sample_rate_real"] = sample_rate
         self.logging.debug(str(self.config.record_audio_info))
 
-        wf = wave.open(self.recording_filename, 'wb')
-        wf.setnchannels(self.CHANNELS)
-        wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
-        #wf.setframerate(self.RATE)
-        wf.setframerate(sample_rate)
-        wf.writeframes(b''.join(self.recording_frames))
-        wf.close()
+        try:
+            wf = wave.open(self.recording_filename, 'wb')
+            wf.setnchannels(self.CHANNELS)
+            wf.setsampwidth(self.audio.get_sample_size(self.FORMAT))
+            #wf.setframerate(self.RATE)
+            wf.setframerate(sample_rate)
+            wf.writeframes(b''.join(self.recording_frames))
+            wf.close()
+        except Exception as e:
+            self.logging.error("Error writing audio file: " + str(e))
+            self.recording_processing = False
+            self.recording_frames = []
+            self.recording_filename = []
+            self.config.record_audio_info["status"] = "error"
 
         self.config.record_audio_info["length"] = len(self.recording_frames) * self.CHUNK / self.BITS_PER_SAMPLE / float(self.RATE)
         self.config.record_audio_info["status"] = "finished"
         self.recording_frames = []
-        self.logging.info("Stopped recording of '" + self.recording_filename + "'.")
+        self.recording_timestamp = []
         self.recording_processing = False
+        self.logging.info("Stopped recording of '" + str(self.recording_filename) + "'.")
 
     def encode_mp3(self, frames, quality=7):
         """

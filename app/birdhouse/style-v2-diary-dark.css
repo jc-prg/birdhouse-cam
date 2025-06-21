@@ -1,0 +1,23 @@
+
+@media (prefers-color-scheme: dark) {
+
+    :root {
+      --diary-day-background: #222222;
+      --diary-header-background: #131313;
+      --diary-header-text: white;
+      --diary-header-text-stage: black;
+      --diary-milestone-background: #222222;
+      --diary-image-background: none;
+      --diary-today-background: #450000;
+      --diary-today-border: red;
+      --diary-calendar-month: #000066;
+      --diary-calendar-weekday: #00008f;
+    }
+
+    .diary-icon.diary-archive { background-image: url('img/image.png'); }
+    .diary-icon.diary-video   { background-image: url('img/video.png'); }
+    .diary-icon.diary-edit    { background-image: url('img/edit.png'); }
+    .diary-icon.diary-add     { background-image: url('img/add.png'); }
+    .diary-icon.diary-delete  { background-image: url('img/delete.png'); }
+    .diary-icon.diary-info    { background-image: url('img/info.png'); }
+}

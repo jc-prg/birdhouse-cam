@@ -1,0 +1,165 @@
+/* configuration of default HTML elements */
+
+:root {
+    --bh-link: blue;
+    --bh-link-visited: darkblue;
+    --bh-link-hover: darkblue;
+}
+
+a         { color  : var(--bh-link); }
+a:link    { color  : var(--bh-link); }
+a:visited { color  : var(--bh-link-visited); }
+a:hover   { color  : var(--bh-link-hover); font-weight : bold; }
+
+h1        { margin : 4px; }
+h2        { margin : 4px; }
+h3        { margin : 4px; }
+
+body      { background: var(--app-background); }
+/* body   { touch-action: none; } */
+
+#remote_nav { height: 100vh; }
+
+#nav2       { width: 100%; z-index: 100; left: 0%; display: block; border-bottom: 1px solid #222222; }
+#nav        { width: 51%; z-index: 200; box-shadow: unset; }
+
+#headerRight            { z-index: 101; }
+#statusLED              { z-index: 102; }
+#statusLEDload          { z-index: 103; }
+#headerRightToolTip     { z-index: 104; }
+
+
+.loading_overlay {
+    position        : absolute;
+    top             : 0px;
+    left            : 0px;
+    z-index         : 200;
+    background      : var(--app-loading-overlay);
+    border          : solid 0px var(--app-loading-overlay);
+    height          : 100%;
+    width           : 100%;
+    border-radius   : 0px;
+    border          : 0px;
+    display         : flex; /* Add flexbox */
+    justify-content : center; /* Center horizontally */
+    align-items     : center; /* Center vertically */
+}
+
+.closing-message {
+    max-width: 70%;
+    padding: 40px;
+    marding: 40px;
+    border: 1px solid white;
+    border-radius: 10px;
+    font-size: 18px;
+    background: var(--app-dashboard-default);
+}
+
+
+/* CONTROL PANEL INDEX VIEW ADMIN -------------------------- */
+
+
+:root {
+    --control-panel-background: #2a2a3c;
+    --control-panel-button-background: #3b3b4f;
+    --control-panel-button-background-hover: #50506a;
+}
+
+.control-panel-container {
+  font-family: sans-serif;
+  margin-right: 10px;
+  margin-bottom: 20px;
+/*
+  background: #1e1e2f;
+  color: white;
+  height: 100vh;
+  */
+}
+
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  background: var(--control-panel-background);
+  padding: 15px;
+  padding-right: 8px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+}
+
+.control-panel-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.control-panel-button {
+  background: var(--control-panel-button-background);
+  border: none;
+  width: 33.3%;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+  min-height: 54px;
+}
+
+.control-panel-button svg {
+  fill: white;
+  stroke: white;
+}
+
+.control-panel-button:hover {
+  background: var(--control-panel-button-background-hover);
+}
+
+.control-panel-button:disabled:hover {
+  background: var(--control-panel-button-background);
+  cursor: not-allowed;
+}
+
+.control-panel-button:disabled svg {
+  fill: #999;
+  stroke: #999;
+}
+
+.control-panel-button svg {
+  width: 32px;
+  height: 32px;
+  fill: white;
+  transition: fill 0.3s;
+}
+
+/* Start button hover turns icon red */
+.control-panel-button.start:hover svg {
+  fill: #ff4d4d;
+}
+
+.control-panel-button span {
+  font-size: 12px;
+  text-align: center;
+}
+
+.control-panel-button.two {
+  width: 50%;
+}
+
+.control-panel-button-description {
+  display: none;
+}
+
+/* for smaller devices */
+
+@media (max-width: 600px) {
+
+    .control-panel              { gap: 10px; padding: 10px; padding-right: 4px; }
+    .control-panel-row          { gap: 5px; }
+    .control-panel-button svg   { width: 24px; height: 24px; }
+    .control-panel-button       { min-height: 50px; }
+
+}

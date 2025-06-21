@@ -1,3 +1,5 @@
+/* dark scheme */
+
 @media (prefers-color-scheme: dark) {
 
   input[type="range"].bh-slider, .bh-slider {

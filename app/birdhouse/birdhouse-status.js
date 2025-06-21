@@ -4,13 +4,15 @@
 // show status functions
 //--------------------------------------
 
-var header_color_error = "#993333";
-var header_color_warning = "#666633";
-var header_color_default = "";
+var header_color_error      = "#993333";
+var header_color_ok         = "#339933";
+var header_color_warning    = "#666633";
+var header_color_default    = "";
 var weather_footer = [];
 var loading_dots_red   = '<span class="loading-dots"><span class="dot red"></span><span class="dot red"></span><span class="dot red"></span></span>';
 var loading_dots_green = '<span class="loading-dots"><span class="dot green"></span><span class="dot green"></span><span class="dot green"></span></span>';
 var app_processing_active = false;
+var app_active_processes = {};
 var app_server_error = false;
 
 /*
@@ -84,53 +86,89 @@ function birdhouseStatus_connectionError() {
 * @param (dict) data: response from API status request
 */
 function birdhouseStatus_print(data) {
-    //if (!data["STATUS"]) { data["STATUS"] = app_data["STATUS"]; }
-    console.debug("Update Status ...");
-    setTextById("navActive", app_active_page);
+
+    console.debug("Update Status ("+app_active.page+") ...");
+    setTextById("navActive", app_active.page);
+
+    if (data["STATUS"]["admin_allowed"] != false)   { app_admin_allowed = true; }
+    else {
+        app_session_id_count += 1;
+        if (app_session_id_count > 2 && app_session_id != "") {
+            birdhouse_logout();
+            app_session_id_count = 0;
+            if (app_pages_admin.includes(app_active.page)) { birdhousePrint_page("INDEX"); }
+        }
+    }
 
     var pages_content   = ["INDEX", "OBJECTS", "FAVORITES", "ARCHIVE", "TODAY", "TODAY_COMPLETE", "WEATHER"];
-    var pages_settings  = ["SETTINGS", "CAMERA_SETTINGS", "DEVICE_SETTINGS", "IMAGE_SETTINGS", "STATISTICS", "INFORMATION"];
+    var pages_settings  = ["SETTINGS", "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_STATISTICS", "SETTINGS_INFORMATION"];
+
+    // reload title
+    var reload_icon = document.getElementById("reload_page");
+    if (reload_icon) {
+        var page = app_active.page;
+        if (app_active.date != "" && page == "TODAY") { page = "ARCHIVE"; }
+        if (app_active.date != "") { reload_icon.title = page+" | "+app_active.cam+" | "+app_active.date; }
+        else                       { reload_icon.title = page+" | "+app_active.cam; }
+    }
 
     // set latest status data to var app_data
-    //app_data       = data;
     weather_footer = [];
-    app_processing_active = false;
     app_server_error = false;
 
     // check page length vs. screen height
     var body = document.body, html = document.documentElement;
     var height = Math.max( body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight );
 
-    if (height > 1.5 * document.body.clientHeight)          { elementVisible("move_up"); }
-    else                                                    { elementHidden("move_up"); }
+    // Navigation element to scroll to the top off the page
+    let scrollY = window.scrollY || window.pageYOffset;
+    if (height > 1.2 * document.body.clientHeight && scrollY > 10)  { elementVisible("moveUp"); elementHidden("moveUp_off"); }
+    else                                                            { elementVisible("moveUp_off"); elementHidden("moveUp"); }
 
-    if (appSettings.loaded_index)                           { setTextById("device_status_short", birdhouseDevices("", data, "short")); appSettings.loaded_index = false; }
-
-    if (pages_settings.includes(app_active_page))           { birdhouseStatus_system(data); }
-    if (pages_settings.includes(app_active_page))           { birdhouseStatus_processing(data); }
-    if (pages_settings.includes(app_active_page))           { birdhouseStatus_relays(data); }
-    if (pages_settings.includes(app_active_page))           { birdhouse_settings.server_dashboard_fill(data); }
-    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_sensors(data); }
-
-    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_cameras(data); }
-    if (app_active_page == "INDEX" || "CAMERA_SETTINGS")    { birdhouseStatus_microphones(data); }
-
-    if (app_active_page == "INDEX")                         { birdhouseStatus_recordButtons(data); }
-    if (pages_content.includes(app_active_page))            { birdhouseStatus_loadingViews(data); }
-    if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
-    if (app_active_page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
-    if (app_active_page == "DEVICE_SETTINGS")               { birdhouseStatus_weather(data); }
-    if (app_active_page == "WEATHER")                       { birdhouseStatus_weather(data); }
-    if (pages_content.includes(app_active_page))            { birdhouseStatus_weather(data); }
-
-    if (!appSettings.active) {
-        document.getElementById(app_frame_info).style.display = "block";
-        html = "<center><i><font color='gray'>";
-        html += weather_footer.join(" / ");
-        html += "</font></i></center>";
-        setTextById(app_frame_info, html);
+    // Navigation element to move back and forth in the view history
+    if (app_active_history.length > 1) {
+        if (app_active_history_pos+1 < app_active_history.length)   { elementVisible("moveBack"); elementHidden("moveBack_off"); }
+        else                                                        { elementVisible("moveBack_off"); elementHidden("moveBack"); }
+        if (app_active_history_pos > 0)                             { elementVisible("moveForth"); elementHidden("moveForth_off"); }
+        else                                                        { elementVisible("moveForth_off"); elementHidden("moveForth"); }
         }
 
+
+    if (appSettings.loaded_index)                           {
+        setTextById("device_status_short", birdhouseDevices("", data, "short"));
+
+        setTextById("app_open_close", birdhouse_settings.settings_app_open_close());
+        appSettings.loaded_index = false;
+        }
+
+    if (pages_settings.includes(app_active.page))           { birdhouseStatus_system(data); }
+    if (pages_settings.includes(app_active.page))           { birdhouseStatus_processing(data); }
+    if (pages_settings.includes(app_active.page))           { birdhouseStatus_relays(data); }
+    if (pages_settings.includes(app_active.page))           { birdhouse_settings.server_dashboard_fill(data); }
+
+    if (app_active.page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_cameras(data); }
+    if (app_active.page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_microphones(data); }
+
+    if (app_active.page == "INDEX" ||
+        pages_settings.includes(app_active.page))           { birdhouseStatus_recordVideo(data); }
+    if (pages_settings.includes(app_active.page))           { birdhouseStatus_createVideoDay(data); }
+    if (pages_content.includes(app_active.page))            { birdhouseStatus_loadingViews(data); }
+    if (app_active.page == "ARCHIVE" || "TODAY")            { birdhouseStatus_downloads(data); }
+    if (app_active.page == "ARCHIVE" || "TODAY")            { birdhouseStatus_detection(data); }
+
+    if (pages_settings.includes(app_active.page))           { birdhouseStatus_weather(data); }
+    else if (app_active.page == "WEATHER")                  { birdhouseStatus_weather(data); }
+    else if (pages_content.includes(app_active.page))       { birdhouseStatus_weather(data, "content"); }
+
+    if (pages_settings.includes(app_active.page))           { birdhouseStatus_sensors(data); }
+    else if (pages_content.includes(app_active.page))       { birdhouseStatus_sensors(data, "content"); }
+
+    //document.getElementById(app_frame.info).style.display = "block";
+    html = "<center><i><font color='gray'>";
+    html += weather_footer.join("&nbsp;&nbsp;/&nbsp;&nbsp;");
+    html += "</font></i></center>";
+    setTextById(app_frame.info, html);
+    setTextById("server_start_time", lang("STARTTIME") + ": " + data["STATUS"]["start_time"]);
 }
 
 /*
@@ -335,7 +373,7 @@ function birdhouseStatus_cameraParam(data, camera) {
 *
 * @param (dict) data: response from API status request
 */
-function birdhouseStatus_weather(data) {
+function birdhouseStatus_weather(data, type="all") {
     // weather information
     var weather         = data["STATUS"]["weather"];
     var settings        = data["SETTINGS"]["devices"]["weather"];
@@ -347,51 +385,48 @@ function birdhouseStatus_weather(data) {
 
     if (weather["current"] && weather["current"]["description_icon"]) {
         if (settings["active"]) {
-            if (weather["info_city"] != "") {
-                entry = weather["info_city"] + ": " + weather["current"]["temperature"] + "°C";
-                }
-            else if (weather["info_module"]["name"]) {
-                entry = weather["info_module"]["name"] + ": " + weather["current"]["temperature"] + "°C";
-            }
-            else  {
-                entry = "Internet: " + weather["current"]["temperature"] + "°C";
-            }
+            if (weather["info_city"] != "")             { entry = weather["info_city"] + ": " + weather["current"]["temperature"] + "°C"; }
+            else if (weather["info_module"]["name"])    { entry = weather["info_module"]["name"] + ": " + weather["current"]["temperature"] + "°C"; }
+            else                                        { entry = "Internet: " + weather["current"]["temperature"] + "°C"; }
             entry = "<big>" + weather["current"]["description_icon"] + "</big> &nbsp; " + entry;
             weather_icon = weather["current"]["description_icon"];
             weather_update = weather["info_update"];
         }
-        weather_error = "Running: " + weather["info_status"]["running"] + "\n";
-        if (weather["info_status"]["error"] || weather["info_status"]["running"] == "error") {
-            weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
-            weather_error += "Message: " + weather["info_status"]["error_msg"];
-            setHeaderColor(header_id="weather_error", header_color=header_color_error);
-            setHeaderColor(header_id="weather_settings", header_color=header_color_error);
-            setStatusColor(status_id="status_error_WEATHER", "red");
-        }
-        else if (weather["info_status"]["running"].indexOf("paused") > -1) {
-            setHeaderColor(header_id="weather_error", header_color=header_color_warning);
-            setStatusColor(status_id="status_error_WEATHER", "black");
-        }
-        else {
-            setHeaderColor(header_id="weather_settings", header_color="");
-            setHeaderColor(header_id="weather_error", header_color="");
-            setStatusColor(status_id="status_error_WEATHER", "green");
-        }
-        if (settings["active"] == true) {
-            setStatusColor(status_id="status_active_WEATHER", "white");
+        if (type == "all") {
+            weather_error = "Running: " + weather["info_status"]["running"] + "\n";
+            if (weather["info_status"]["error"] || weather["info_status"]["running"] == "error") {
+                weather_error += "Error: " + weather["info_status"]["error"].toString() + "\n";
+                weather_error += "Message: " + weather["info_status"]["error_msg"];
+                setHeaderColor(header_id="weather_error", header_color=header_color_error);
+                setHeaderColor(header_id="weather_settings", header_color=header_color_error);
+                setStatusColor(status_id="status_error_WEATHER", "red");
             }
-        else{
-            setStatusColor(status_id="status_active_WEATHER", "black");
-            setStatusColor(status_id="status_error_WEATHER", "black");
+            else if (weather["info_status"]["running"].indexOf("paused") > -1) {
+                setHeaderColor(header_id="weather_error", header_color=header_color_warning);
+                setStatusColor(status_id="status_error_WEATHER", "black");
+            }
+            else {
+                setHeaderColor(header_id="weather_settings", header_color="");
+                setHeaderColor(header_id="weather_error", header_color="");
+                setStatusColor(status_id="status_error_WEATHER", "green");
+            }
+            if (settings["active"] == true) {
+                setStatusColor(status_id="status_active_WEATHER", "white");
+                }
+            else{
+                setStatusColor(status_id="status_active_WEATHER", "black");
+                setStatusColor(status_id="status_error_WEATHER", "black");
+            }
         }
-    }
-    if (entry != "") { weather_footer.push(entry); }
-    setTextById("weather_info_icon", weather_icon);
-    setTextById("weather_info_update", weather_update);
-    setTextById("weather_info_error", weather_error);
+        setTextById("weather_info_icon", weather_icon);
+        setTextById("weather_info_update", weather_update);
+        setTextById("weather_info_error", weather_error);
 
-    coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
-    setTextById("gps_coordinates", coordinates);
+        coordinates = "(" + settings["gps_coordinates"].toString().replaceAll(",", ", ") + ")";
+        setTextById("gps_coordinates", coordinates);
+    }
+
+    if (entry != "") { weather_footer.push(entry); }
 }
 
 /*
@@ -422,7 +457,7 @@ function birdhouseStatus_relays(data) {
 *
 * @param (dict) data: response from API status request
 */
-function birdhouseStatus_sensors(data) {
+function birdhouseStatus_sensors(data, type="all") {
     // add sensor information
     var sensors         = data["SETTINGS"]["devices"]["sensors"];
     var status_dev      = data["STATUS"]["devices"];
@@ -430,36 +465,38 @@ function birdhouseStatus_sensors(data) {
     var sensor_status   = status_dev["sensors"];
     var keys            = Object.keys(sensors);
     for (let sensor in sensors) {
-        if (sensor_status[sensor]) {
-            //var status = sensors[sensor]["status"];
-            var status = sensor_status[sensor];
-            var sensor_error_01 = status["error_msg"]; //.join(",\n");
-            var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
-            if (status["error_connect"]) {
-                sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
+        if (type == "all") {
+            if (sensor_status[sensor]) {
+                //var status = sensors[sensor]["status"];
+                var status = sensor_status[sensor];
+                var sensor_error_01 = status["error_msg"]; //.join(",\n");
+                var sensor_error_02 = "Error: " + status["error"].toString() + "\n\n";
+                if (status["error_connect"]) {
+                    sensor_error_02    += "Error Connect: " + status["error_connect"].toString() + "\n\n";
+                    }
+                if (status["error_module"]) {
+                    sensor_error_02    += "Error Module: " + status["error_module"].toString();
+                    }
+                setTextById("error_sensor1_"+sensor, sensor_error_01);
+                setTextById("error_sensor2_"+sensor, sensor_error_02);
+                setTextById("status_sensor_"+sensor, status["running"]);
+                setTextById("status_sensor_last_"+sensor, Math.round(status["last_read"]*10)/10 +"s");
+                if (status["running"] == "OK") {
+                    setStatusColor(status_id="status_active_"+sensor, "white");
                 }
-            if (status["error_module"]) {
-                sensor_error_02    += "Error Module: " + status["error_module"].toString();
+                else {
+                    setStatusColor(status_id="status_active_"+sensor, "black");
                 }
-            setTextById("error_sensor1_"+sensor, sensor_error_01);
-            setTextById("error_sensor2_"+sensor, sensor_error_02);
-            setTextById("status_sensor_"+sensor, status["running"]);
-            setTextById("status_sensor_last_"+sensor, Math.round(status["last_read"]*10)/10 +"s");
-            if (status["running"] == "OK") {
-                setStatusColor(status_id="status_active_"+sensor, "white");
-            }
-            else {
-                setStatusColor(status_id="status_active_"+sensor, "black");
-            }
-            if (status["error"] || status["error_module"] || status["connect"]) {
-                setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
-                setHeaderColor(header_id=sensor, header_color=header_color_error);
-                setStatusColor(status_id="status_error_"+sensor, "red");
-            }
-            else {
-                setHeaderColor(header_id=sensor+"_error", header_color="");
-                setHeaderColor(header_id=sensor, header_color="");
-                setStatusColor(status_id="status_error_"+sensor, "green");
+                if (status["error"] || status["error_module"] || status["connect"]) {
+                    setHeaderColor(header_id=sensor+"_error", header_color=header_color_error);
+                    setHeaderColor(header_id=sensor, header_color=header_color_error);
+                    setStatusColor(status_id="status_error_"+sensor, "red");
+                }
+                else {
+                    setHeaderColor(header_id=sensor+"_error", header_color="");
+                    setHeaderColor(header_id=sensor, header_color="");
+                    setStatusColor(status_id="status_error_"+sensor, "green");
+                }
             }
         }
 
@@ -631,19 +668,23 @@ function birdhouseStatus_loadingViews(data, view="") {
             if (status == "in progress") {
                 setTextById("loading_status_"+views[i], progress);
                 setTextById("processing_"+views[i]+"_view", progress);
-                app_processing_active = true;
+                app_active_processes["processing_"+views[i]+"_view"] = true;
             }
             else if (status == "started") {
                 setTextById("loading_status_"+views[i], lang("WAITING"));
 
                 if (views[i] != "object" || data["STATUS"]["object_detection"]["active"]) {
                     setTextById("processing_"+views[i]+"_view", lang("WAITING"));
-                    app_processing_active = true;
+                    app_active_processes["processing_"+views[i]+"_view"] = true;
                     }
             }
             else if (status == "done") {
                 setTextById("loading_status_"+views[i], lang("DONE"));
                 setTextById("processing_"+views[i]+"_view", lang("INACTIVE"));
+                app_active_processes["processing_"+views[i]+"_view"] = false;
+            }
+            else {
+                app_active_processes["processing_"+views[i]+"_view"] = false;
             }
         }
     }
@@ -658,28 +699,53 @@ function birdhouseStatus_loadingViews(data, view="") {
 * @param (dict) data: response from API status request
 */
 function birdhouseStatus_detection(data) {
+    var i = 0;
+    var message = "";
+    var detection_cameras = data["STATUS"]["object_detection"]["processing_info"];
+    var settings = app_data["SETTINGS"]["devices"]["cameras"];
+    console.debug("Detection Status - processing: " + data["STATUS"]["object_detection"]["processing"] + " / " +
+                  "progress: " + data["STATUS"]["object_detection"]["progress"] + " / waiting: " + data["STATUS"]["object_detection"]["waiting"]);
 
-    if (data["STATUS"]["object_detection"]["progress"]) {
-        message_1 = data["STATUS"]["object_detection"]["progress"] + " %";
-        message_2 = message_1;
-        if (data["STATUS"]["object_detection"]["waiting"] > 1) {
-            message_1 += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
-            message_2 += " &nbsp; <i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
-            }
-        else if (data["STATUS"]["object_detection"]["waiting"] == 1) {
-            message_1 += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
-            message_2 += " &nbsp; <i>(" + lang("WAITING_DATE") + ")</i>";
-            }
-        setTextById("last_answer_detection_progress", message_1);
-        setTextById("processing_object_detection", message_2);
-        app_processing_active = true;
+
+    if (detection_cameras != undefined && document.getElementById("processing_object_detection") != undefined) {
+        Object.entries(detection_cameras).forEach(([key,value])=> {
+            i++;
+            message += key.toUpperCase() + ": ";
+            if (detection_cameras[key] && detection_cameras[key]["active"] && detection_cameras[key]["processing"]) {
+                message += "OK processing <b>" + detection_cameras[key]["progress"] + "%</b> "
+                message += "(" + detection_cameras[key]["model"] + " | waiting: " + detection_cameras[key]["waiting"] + ")";
+                app_active_processes["processing_object_detection_"+key] = true;
+                }
+            else if (detection_cameras[key] && detection_cameras[key]["active"]) {
+                message += lang("INACTIVE");
+                app_active_processes["processing_object_detection_"+key] = false;
+                }
+            else {
+                message += "N/A";
+                app_active_processes["processing_object_detection_"+key] = false;
+                }
+            message += "<br/>";
+            });
+        setTextById("processing_object_detection", message);
         }
-    else if (data["STATUS"]["object_detection"]["progress"] != undefined && data["STATUS"]["object_detection"]["waiting"] == 0) {
-        setTextById("processing_object_detection", lang("INACTIVE"));
+
+    if (document.getElementById("last_answer_detection_progress") != undefined) {
+        if (data["STATUS"]["object_detection"]["processing"]) {
+            message_1 = data["STATUS"]["object_detection"]["progress"] + " %";
+            message_2 = message_1;
+            if (data["STATUS"]["object_detection"]["waiting"] > 1) {
+                message_1 += "<br/><i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+                message_2 += " &nbsp; <i>(" + lang("WAITING_DATES", [data["STATUS"]["object_detection"]["waiting"]]) + ")</i>";
+                }
+            else if (data["STATUS"]["object_detection"]["waiting"] == 1) {
+                message_1 += "<br/><i>(" + lang("WAITING_DATE") + ")</i>";
+                message_2 += " &nbsp; <i>(" + lang("WAITING_DATE") + ")</i>";
+                }
+            setTextById("last_answer_detection_progress", message_1);
+            }
         }
 
     var status   = app_data["STATUS"]["object_detection"];
-    var settings = app_data["SETTINGS"]["devices"]["cameras"];
 
     Object.entries(settings).forEach(([key,value])=> {
         if (value["object_detection"]["active"])      { setStatusColor("status_" + key + "_detection_active", "white"); }
@@ -704,32 +770,49 @@ function birdhouseStatus_detection(data) {
 *
 * @param (dict) data: response from API status request
 */
-function birdhouseStatus_recordButtons(data) {
-    status_data  = data["STATUS"]["video_recording"];
-    p_video      = document.getElementById("processing_video");
-    p_video_info = "";
+function birdhouseStatus_recordVideo(data) {
+    var status_data  = data["STATUS"]["video_recording"];
+    var p_video      = document.getElementById("processing_video");
+    var p_video_info = "";
 
     Object.entries(status_data).forEach(([key,value]) => {
-        b_start  = document.getElementById("rec_start_"+key);
-        b_stop   = document.getElementById("rec_stop_"+key);
-        b_cancel = document.getElementById("rec_cancel_"+key);
+        b_start  = document.getElementById("rec2_start_"+key);
+        b_stop   = document.getElementById("rec2_stop_"+key);
+        b_cancel = document.getElementById("rec2_cancel_"+key);
+        b_object = document.getElementById("rec2_object_"+key);
+        b_foto   = document.getElementById("rec2_foto_"+key);
+        var object_detection = false;
+        if (app_data["SETTINGS"]["devices"]["cameras"][key]) {
+            object_detection = app_data["SETTINGS"]["devices"]["cameras"][key]["object_detection"]["active"];
+        }
 
         if (p_video != undefined) {
             p_video_info += key.toUpperCase() + ": ";
-            if (value["error"])                                   { p_video_info += "error "; }
-            else if (!value["processing"] && !value["recording"]) { p_video_info += "inactive"; }
+            if (value["error"])                                   { p_video_info += "N/A "; }
+            else if (!value["processing"] && !value["recording"]) { p_video_info += lang("INACTIVE"); }
             else if (value["active"])                             { p_video_info += "OK "; }
 
-            if (value["recording"])       { p_video_info += "; recording (" + value["info"]["length"] + "s)<br/>"; }
-            else if (value["processing"]) { p_video_info += "; processing (" + value["info"]["percent"] + "%)<br/>"; }
-            else                          { p_video_info += "<br/>"}
+            if (value["recording"])         {
+                p_video_info += "; recording <b>" + value["info"]["length"] + "s</b><br/>";
+                app_active_processes["processing_video_"+key] = true;
+                }
+            else if (value["processing"])   {
+                p_video_info += "; processing <b>" + Math.round(value["info"]["percent"]*10)/10 + "%</b><br/>";
+                app_active_processes["processing_video_"+key] = true;
+                }
+            else                            {
+                p_video_info += "<br/>";
+                app_active_processes["processing_video_"+key] = false;
+                }
+            console.debug("-> Status recordVideo");
+            console.debug(value);
             }
 
         if (b_start != undefined) {
-            if (!value["active"])           { b_start.disabled = "disabled"; b_start.style.color = "white";}
-            else if (value["recording"])    { b_start.disabled = "disabled"; b_start.style.color = "red"; }
-            else if (value["processing"])   { b_start.disabled = "disabled"; b_start.style.color = "yellow"; }
-            else                            { b_start.disabled = ""; b_start.style.color = "lightgray"; }
+            if (!value["active"])           { b_start.disabled = "disabled"; }
+            else if (value["recording"])    { b_start.disabled = "disabled"; b_start.style.backgroundColor = "darkred"; }
+            else if (value["processing"])   { b_start.disabled = "disabled"; }
+            else                            { b_start.disabled = ""; }
             }
         if (b_stop != undefined) {
             if (value["recording"])         { b_stop.disabled = ""; }
@@ -740,10 +823,57 @@ function birdhouseStatus_recordButtons(data) {
             else if (!value["recording"] && !value["processing"]) { b_cancel.disabled = "disabled"; }
             else                                                  { b_cancel.disabled = "disabled"; }
             }
+        if (b_foto != undefined) {
+            if (value["recording"])         { b_foto.disabled = "disabled"; }
+            else if (value["processing"])   { b_foto.disabled = "disabled"; }
+            else                            { b_foto.disabled = ""; }
+        }
+        if (b_object != undefined) {
+            if (object_detection == false)  { b_object.disabled = "disabled"; }
+            else if (value["recording"])    { b_object.disabled = "disabled"; }
+            else if (value["processing"])   { b_object.disabled = "disabled"; }
+            else                            { b_object.disabled = ""; }
+        }
     });
 
     if (p_video_info == "") { p_video_info = "inactive"; }
     setTextById("processing_video", p_video_info);
+}
+
+/*
+* check status of video creation for a day and include it into processing view
+*
+* @param (dict) data: response from API status request
+*/
+function birdhouseStatus_createVideoDay(data) {
+    var status_data  = data["STATUS"]["video_creation_day"];
+    var p_video      = document.getElementById("processing_video_day");
+    var p_video_info = "";
+
+    Object.entries(status_data).forEach(([key,value]) => {
+
+        if (p_video != undefined) {
+            p_video_info += key.toUpperCase() + ": ";
+            if (value["error"])             { p_video_info += "N/A "; }
+            else if (!value["processing"])  { p_video_info += "inactive"; }
+            else if (value["active"])       { p_video_info += "OK "; }
+
+            if (value["processing"])        {
+                p_video_info += "; processing <b>" + Math.round(value["info"]["percent"]*10)/10 + "%</b><br/>";
+                app_active_processes["processing_video_day_"+key] = true;
+                }
+            else                            {
+                app_active_processes["processing_video_day_"+key] = false;
+                p_video_info += "<br/>"
+                }
+
+            console.debug("-> Status createVideoDay");
+            console.debug(value);
+            }
+    });
+
+    if (p_video_info == "") { p_video_info = "inactive"; }
+    setTextById("processing_video_day", p_video_info);
 }
 
 /*
@@ -769,8 +899,14 @@ function birdhouseStatus_downloads(data) {
         message    += all_links_2;
         setTextById("archive_download_link", all_links_1);
         }
-    if (count_downloads + count_processes > 0)  { setTextById("processing_downloads", message); app_processing_active = true; }
-    else                                        { setTextById("processing_downloads", lang("INACTIVE")); }
+    if (count_downloads + count_processes > 0)  {
+        setTextById("processing_downloads", message);
+        }
+    else {
+        setTextById("processing_downloads", lang("INACTIVE"));
+        }
+    if (count_processes > 0)    { app_active_processes["processing_downloads"] = true; }
+    else                        { app_active_processes["processing_downloads"] = false; }
 
     collect4download_amount = app_collect_list.length;
     setTextById("collect4download_amount", collect4download_amount);
@@ -785,21 +921,38 @@ function birdhouseStatus_downloads(data) {
 function birdhouseStatus_processing(data) {
     var process_information = {
         "Object Detection":                 "processing_object_detection",
-        "Download preparation":             "processing_downloads",
-        "Loading archive view":             "processing_archive_view",
-        "Loading favorite view":            "processing_favorite_view",
-        "Loading object detection view":    "processing_object_view",
-        "Video recording / processing":     "processing_video"
+        "Download preparation":             "processing_downloads",             // OK
+        "Loading archive view":             "processing_archive_view",          // OK
+        "Loading favorite view":            "processing_favorite_view",         // OK
+        "Loading object detection view":    "processing_object_view",           // OK
+        "Video recording":                  "processing_video",                 // OK
+        "Video creation day":               "processing_video_day"              // OK
     }
 
-    if (data["STATUS"]["server"]["backup_process_running"])     { setTextById("processing_backup", lang("ACTIVE")); app_processing_active = true; }
-    else                                                        { setTextById("processing_backup", lang("INACTIVE")); }
+    if (data["STATUS"]["server"]["backup_process_running"])     {
+        setTextById("processing_backup", lang("ACTIVE"));
+        app_active_processes["processing_backup"] = true;
+        }
+    else {
+        setTextById("processing_backup", lang("INACTIVE"));
+        app_active_processes["processing_backup"] = false;
+        }
+
+    var active_processes    = "";
+    app_processing_active = false;
+    Object.keys(app_active_processes).forEach( key => {
+        if (app_active_processes[key] == true) {
+            active_processes += key + ", ";
+            app_processing_active = true;
+            }
+    });
 
     if (app_processing_active) {
         var text = getTextById("processing_info_header");
         if (text != loading_dots_green) {
             setTextById("processing_info_header", loading_dots_green);
             }
+        console.log("Active processes: " + active_processes);
         }
     else { setTextById("processing_info_header", ""); }
 }

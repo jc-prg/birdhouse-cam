@@ -1,11 +1,14 @@
 import cv2
 import threading
 import time
+import os
 
 from modules.presets import *
 from modules.bh_class import BirdhouseCameraClass
 from modules.bh_ffmpeg import BirdhouseFfmpegTranscoding
 from modules.image import BirdhouseImageSupport
+
+from modules.presets import birdhouse_env
 
 
 class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
@@ -32,17 +35,25 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.directory = self.config.db_handler.directory("videos")
         self.queue_create = []
         self.queue_trim = []
+        self.queue_thumb = []
         self.queue_wait = 10
 
         self.record_audio_filename = ""
         self.record_video_info = None
         self.record_start_time = None
+        self.record_timestamps_before = []
+        self.record_timestamps_after = []
         self.image_size = [0, 0]
+        self.max_length = 60
+        self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
+
+        self._recording = False
+        self._processing = False
+
         self.recording = False
         self.processing = False
         self.processing_cancel = False
-        self.max_length = 60
-        self.delete_temp_files = True   # usually set to True, can temporarily be used to keep recorded files for analysis
+        self.processing_day_video = False
 
         self.config.set_processing("video-recording", self.id, False)
 
@@ -52,7 +63,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.info = {
             "start": 0,
             "start_stamp": 0,
-            "status": "ready"
+            "status": "ready",
+            "video_fps": {}
         }
         self._running = False
 
@@ -72,6 +84,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         while self._running:
             time.sleep(1)
             count += 1
+            self._processing = (self.processing or self.processing_day_video)
+            self._recording = self.recording
+
             if count >= self.queue_wait:
                 count = 0
 
@@ -99,6 +114,13 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
                     response = self.create_video_trimmed(video_id, start, end)
                     self.config.async_answers.append(["TRIM_DONE", video_id, response["result"]])
                     self.config.async_running = True
+
+                # create thumbnail of video
+                if len(self.queue_thumb) > 0:
+                    [video_id, start, end] = self.queue_thumb.pop()
+                    self.logging.info("Start thumbnail extraction (" + video_id + "): " + str(start) + ".")
+                    response = self.create_video_thumb(video_id, start)
+                    self.config.async_answers.append(["THUMB_DONE", video_id, response["result"]])
 
             self.thread_control()
 
@@ -156,6 +178,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         self.record_audio_filename = audio_filename
         self.processing_cancel = False
         self.info["status"] = "recording"
+        self.record_timestamps_before = []
+        self.record_timestamps_after = []
 
         if self.camera.active and not self.camera.error and not self.recording:
             self.logging.info("Starting video recording (camera=" + self.id + " / micro=" + micro + ") ...")
@@ -193,6 +217,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         self.thread_prio_process(start=False, pid=self.id)
         response = {"command": ["cancel recording"]}
+        self.record_timestamps_before = []
+        self.record_timestamps_after = []
+
         if self.camera.active and not self.camera.error and self.processing:
             self.logging.info("Cancel video processing (" + self.id + ") ...")
             filename = self.ffmpeg.cancel_process()
@@ -228,6 +255,31 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.info["stamp_end"] = current_time.timestamp()
             self.info["status"] = "processing"
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 2)
+            self.info["fps"] = self.record_stop_fps_details()
+
+            initial_stamp = self.record_timestamps_after[0]
+            if "av_sync" in birdhouse_env and birdhouse_env["av_sync"] == True:
+                count = 0
+                last_after = last_fps = 0
+                self.info["video_fps"] = {
+                    "titles": ["fps", "fps_diff", "saving duration"],
+                    "data": {}
+                }
+                for before, after in zip(self.record_timestamps_before, self.record_timestamps_after):
+                    duration = after - before
+                    fps = 0
+                    if last_after != 0:
+                        fps = 1 / (after - last_after)
+                        fps_diff = fps - last_fps
+                    if count > 2:
+                        stamp = after - initial_stamp
+                        self.info["video_fps"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5), round(duration, 5)]
+                    last_after = after
+                    last_fps = fps
+                    count += 1
+            else:
+                del self.info["video_fps"]
+
             if float(self.info["length"]) > 1:
                 self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 2)
             else:
@@ -242,6 +294,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             success = self.create_video()
             if success:
                 self.info["audio"] = self.config.record_audio_info
+
                 if "stamp_start" in self.info["audio"]:
                     self.info["audio"]["delay"] = self.info["stamp_start"] - self.info["audio"]["stamp_start"]
                 self.info["status"] = "finished"
@@ -254,6 +307,56 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             response["error"] = "camera isn't recording " + self.camera.id
         return response
 
+    def record_stop_fps_details(self):
+        """
+        analyze fps for audio and video during the recording
+
+        Returns:
+            dict: details in a format that can be used for chart.js
+        """
+        fps_details = {"video":{}, "audio":{}}
+        if "av_sync" in birdhouse_env and birdhouse_env["av_sync"] == True:
+            initial_stamp = self.record_timestamps_after[0]
+            count = last_after = last_fps = 0
+            fps_details["video"] = {
+                "titles": ["video_fps", "video_fps_diff", "img_saving"],
+                "data": {}
+            }
+            for before, after in zip(self.record_timestamps_before, self.record_timestamps_after):
+                duration = after - before
+                fps = 0
+                if last_after != 0:
+                    fps = 1 / (after - last_after)
+                    fps_diff = fps - last_fps
+                    self.logging.debug(" ---> " + str(fps) + " / " + str(after))
+                if count > 2:
+                    stamp = after - initial_stamp
+                    fps_details["video"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5),
+                                                                                     round(duration, 5)]
+                last_after = after
+                last_fps = fps
+                count += 1
+
+            initial_stamp = self.config.record_audio_info["audio_fps"][0]
+            count = last_timestamp = last_fps = 0
+            fps_details["audio"] = {
+                "titles": ["audio_fps", "audio_fps_diff"],
+                "data": {}
+            }
+            for timestamp in self.config.record_audio_info["audio_fps"]:
+                if last_timestamp != 0:
+                    fps = 1 / (timestamp - last_timestamp)
+                    fps_diff = fps - last_fps
+                    self.logging.debug(" ---> " + str(fps) + " / " + str(timestamp))
+                if count > 2:
+                    stamp = timestamp - initial_stamp
+                    fps_details["audio"]["data"][str(round(stamp, 2)).zfill(7)] = [round(fps, 5), round(fps_diff, 5)]
+                last_timestamp = timestamp
+                last_fps = fps
+                count += 1
+
+        return fps_details
+
     def record_stop_auto(self):
         """
         Check if maximum length is achieved
@@ -262,6 +365,9 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             bool: recording to be stopped due to maximum length
         """
         self.thread_prio_process(start=False, pid=self.id)
+        if not "stamp_start" in self.info:
+            self.info["stamp_start"] = self.config.local_time().timestamp()
+
         if self.info["status"] == "recording":
             max_time = float(self.info["stamp_start"] + self.max_length)
             if max_time < float(self.config.local_time().timestamp()):
@@ -279,18 +385,26 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         """
         if self.recording:
             self.info["length"] = round(self.config.local_time().timestamp() - self.info["stamp_start"], 1)
+            self.info["process"] = "recording"
         elif self.processing:
             self.info["length"] = round(self.info["stamp_end"] - self.info["stamp_start"], 1)
-
-        self.info["image_size"] = self.image_size
-
-        if float(self.info["length"]) > 1:
-            self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+            self.info["process"] = "processing"
+        elif self.processing_day_video:
+            self.info["process"] = "video_of_day"
         else:
-            self.info["framerate"] = 0
+            self.info["process"] = "none"
 
-        for key in self.ffmpeg.progress_info:
-            self.info[key] = self.ffmpeg.progress_info[key]
+        if self.info["process"] != "none":
+
+            self.info["image_size"] = self.image_size
+
+            if "length" in self.info and float(self.info["length"]) > 1:
+                self.info["framerate"] = round(float(self.info["image_count"]) / float(self.info["length"]), 1)
+            else:
+                self.info["framerate"] = 0
+
+            for key in self.ffmpeg.progress_info:
+                self.info[key] = self.ffmpeg.progress_info[key]
 
         return self.info
 
@@ -379,7 +493,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             success = False
         return success
 
-    def create_video_image(self, image, delay=""):
+    def save_video_image(self, image, delay=""):
         """
         Save image with predefined filename in temp directory
 
@@ -387,6 +501,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             image (numpy.ndarray): image data
             delay (float): timestamp when image was created
         """
+        timestamp_start = time.time()
+
         self.info["image_count"] += 1
         self.info["image_files"] = self.filename("vimages")
         self.info["video_file"] = self.filename("video")
@@ -400,6 +516,8 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             result = cv2.imwrite(str(path), image)
             if self.info["image_count"] == 1:
                 self.logging.info("--> Record fist image: saved=" + str(time.time()) + " / delay=" + str(delay))
+            self.record_timestamps_before.append(timestamp_start)
+            self.record_timestamps_after.append(time.time())
             return result
         except Exception as e:
             self.info["image_count"] -= 1
@@ -421,6 +539,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         framerate = 20
 
         self.thread_register_process("day_video", self.id, "start", 0)
+        self.processing_day_video = True
 
         self.logging.info("Remove old files from '" + self.config.db_handler.directory("videos_temp") + "' ...")
         cmd_rm = "rm " + self.config.db_handler.directory("videos_temp") + "*"
@@ -525,6 +644,7 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             "data": video_data
         }
 
+        self.processing_day_video = False
         self.thread_register_process("day_video", self.id, "remove", 0)
         return response
 
@@ -584,6 +704,38 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.logging.warning("No video with the ID " + str(video_id) + " available.")
             return {"result": "No video with the ID " + str(video_id) + " available."}
 
+    def create_video_thumb(self, video_id, start):
+        """
+        create thumbnail
+
+        Args:
+            video_id (str): id of the video to be trimmed
+            start (float): image timecode
+
+        Returns:
+            str: success state (OK, Error)
+        """
+        config_file = self.config.db_handler.read_cache("videos")
+        if video_id in config_file:
+            input_file = config_file[video_id]["video_file"]
+            output_file = config_file[video_id]["thumbnail"]
+            output_file = output_file.replace(".jpeg", "_selected.jpeg")
+            framerate = config_file[video_id]["framerate"]
+            result = self.create_video_thumb_exec(input_file=input_file,
+                                                  output_file=output_file,
+                                                  start_timecode=start)
+            if result == "OK":
+                config_file[video_id]["thumbnail_selected"] = output_file
+
+                self.config.db_handler.write("videos", "", config_file)
+                return {"result": "OK"}
+            else:
+                return {"result": "Error while creating shorter video."}
+
+        else:
+            self.logging.warning("No video with the ID " + str(video_id) + " available.")
+            return {"result": "No video with the ID " + str(video_id) + " available."}
+
     def create_video_trimmed_exec(self, input_file, output_file, start_timecode, end_timecode, framerate):
         """
         creates a shortened version of the video
@@ -601,6 +753,27 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
         output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
 
         success = self.ffmpeg.trim_video(input_file, output_file, start_timecode, end_timecode, framerate)
+
+        if success and os.path.isfile(output_file):
+            return "OK"
+        else:
+            return "Error"
+
+    def create_video_thumb_exec(self, input_file, output_file, start_timecode):
+        """
+        creates a thumbnail of the video
+
+        Args:
+            input_file (str): filename of input file
+            output_file (str): filename for output thumbnail file
+            start_timecode (float): timecode for video
+        Returns:
+            str: success state (OK, Error)
+         """
+        input_file = os.path.join(self.config.db_handler.directory("videos"), input_file)
+        output_file = os.path.join(self.config.db_handler.directory("videos"), output_file)
+
+        success = self.ffmpeg.create_thumbnail(input_file, output_file, start_timecode)
 
         if success and os.path.isfile(output_file):
             return "OK"
@@ -629,6 +802,119 @@ class BirdhouseVideoProcessing(threading.Thread, BirdhouseCameraClass):
             self.queue_trim.append([parameter[0], parameter[1], parameter[2]])
             response["command"] = ["Create short version of video"]
             response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
+
+        return response
+
+    def create_video_thumb_queue(self, param):
+        """
+        create a thumb video and save in DB (not deleting the old video at the moment)
+
+        Args:
+            param (dict): input from API request
+        Returns:
+            dict: information for API response
+        """
+        response = {}
+        parameter = param["parameter"]
+
+        self.logging.info("Create short version of video: " + str(parameter) + " ...")
+        config_data = self.config.db_handler.read_cache(config="videos")
+
+        if parameter[0] not in config_data:
+            response["result"] = "Error: video ID '" + str(parameter[0]) + "' doesn't exist."
+            self.logging.warning("VideoID '" + str(parameter[0]) + "' doesn't exist.")
+        else:
+            self.queue_thumb.append([parameter[0], parameter[1], parameter[2]])
+            response["command"] = ["Create thumbnail of video"]
+            response["video"] = {"video_id": parameter[0], "start": parameter[1], "end": parameter[2]}
+
+        return response
+
+    def create_video_audio_correction_queue(self, param):
+        """
+        Ideas
+        * work with queue as done for video trimming (as it takes a while)
+        * +/- offset
+        * create from main file
+        * save in DB entry as "video_file_audio_correction"
+        """
+        pass
+
+    def replace_video_with_audio_correction(self, param):
+        """
+        * add function, to replace main video file with the corrected one
+          (no option to recreate short version, has to be done before or manually)
+        """
+        pass
+
+    def delete_shortened_video(self, param):
+        """
+        delete shortened video and remove references from db entry
+        Args:
+            param (dict): parameter from API request
+        Returns:
+            dict: information for API response
+        """
+        parameter = param["parameter"]
+        video_id = parameter[0]
+        response = {
+            "video_id": video_id,
+            "command": "Delete shortened video",
+            }
+
+        self.logging.info("Delete short version of video: " + str(parameter) + " ...")
+        config_file = self.config.db_handler.read_cache("videos")
+
+        if video_id in config_file:
+            video = config_file[video_id].copy()
+            file = video["video_file_short"]
+            video["video_file_short"] = ""
+            video["video_file_short_length"] = 0
+            config_file[video_id] = video
+            self.config.db_handler.write("videos", "", config_file)
+
+            cmd_delete = "rm " + str(os.path.join(self.config.db_handler.directory("videos"), file))
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)
+            response["message"] = message
+        else:
+            response["error"] = "Video ID " + video_id + " not found."
+
+        return response
+
+    def delete_thumbnail(self, param):
+        """
+        delete shortened video and remove references from db entry
+        Args:
+            param (dict): parameter from API request
+        Returns:
+            dict: information for API response
+        """
+        parameter = param["parameter"]
+        video_id = parameter[0]
+        response = {
+            "video_id": video_id,
+            "command": "Delete thumbnail",
+            }
+
+        self.logging.info("Delete thumbnail of video: " + str(parameter) + " ...")
+        config_file = self.config.db_handler.read_cache("videos")
+
+        if video_id in config_file:
+            video = config_file[video_id].copy()
+            file = video["thumbnail_selected"]
+            video["thumbnail_selected"] = ""
+            config_file[video_id] = video
+            self.config.db_handler.write("videos", "", config_file)
+
+            cmd_delete = "rm " + str(os.path.join(self.config.db_handler.directory("videos"), file))
+            self.logging.info(cmd_delete)
+            message = os.system(cmd_delete)
+            self.logging.debug(message)
+            response["message"] = message
+        else:
+            response["error"] = "Video ID " + video_id + " not found."
 
         return response
 

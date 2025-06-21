@@ -1,0 +1,61 @@
+/*
+* define specific styles for different iPhones
+*/
+
+/* iPhone X/XS  ---------------------------------------- */
+
+@media only screen and (device-width : 375px) and (device-height : 812px) and (orientation : portrait)  {
+}
+
+@media only screen and (device-width : 375px) and (device-height : 812px) and (orientation : landscape) {
+}
+
+/* iPhone SE2 / 6 / 7 / 8 ----------------------------------------- */
+
+@media only screen and (device-width : 375px) and (device-height : 667px) and (orientation : portrait)  {
+}
+@media only screen and (((device-width : 375px) and (device-height : 667px) and (orientation : landscape)) or ((device-height : 375px) and (device-width : 667px))) {
+}
+
+/* iPhone 5/SE1 ----------------------------------------- */
+
+@media only screen and (device-width : 320px) and (device-height : 568px) and (orientation : portrait)  {
+}
+
+@media only screen and (device-width : 568px) and (device-height : 320px) and (orientation : landscape) {
+}
+
+/* iPhone SE2 & X/XS ------------------------------------- */
+
+@media only screen and (device-width : 375px) and (orientation : portrait) {
+}
+
+/* iPhone XS: landscape ---------------------------------- */
+
+@media only screen and (((device-width : 375px) and (device-height : 812px) and (orientation : landscape)) or  ((device-height : 375px) and (device-width : 812px))) {
+}
+
+/* iPhone 16pro ------------------------------------------ */
+
+@media only screen and (device-width : 402px) {
+
+    .setting_bg.header.empty            { height: 46px; }
+    .settings_button_index.header       { width: 34px; padding: 6px; padding-bottom: 2px; height: 32px; min-height: unset; }
+    .settings_button_index.header img   { max-width: 90%; max-height: 90% }
+}
+
+@media only screen and (device-width : 402px) and (device-height : 874px) and (orientation : portrait) {
+}
+
+@media only screen and (((device-width : 402px) and (device-height : 874px) and (orientation : landscape)) or ((device-height : 402px) and (device-width : 874px)))  {
+
+    #remote_nav, #nav-b     { display : block; }
+    #navi-click             { display : none; }
+
+    .frame_column.wide      { width: calc(100% - 175px); font-size : 10px; }
+    .frame_column.wide td   { font-size : 10px; }
+    .setting_bg.header      { width: calc(100% - 191px); left: 163px;}
+    .separator_group        { font-size : 10px; }
+}
+
+/* ------------------------------------------------------- */

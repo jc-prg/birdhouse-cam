@@ -1,0 +1,87 @@
+/*
+* define style for several other elements
+*/
+
+/* WEATHER --------------------------------------- */
+
+.weather-3day-overview {
+  width : 100%;
+  float: left;
+  margin: 10px;
+}
+
+@media (min-width: 1100px) {
+  .weather-3day-overview {
+    width : calc( 33.3% - 20px);
+  }
+}
+
+.weather_hide_if_small {
+  display: none;
+}
+
+.weather_show {
+  display: blocK;
+}
+
+#birdhouseChart {
+  max-height:300px;
+}
+
+.weather_chart {
+  max-height:450px;
+}
+
+#weather_chart {
+  max-height:300px;
+}
+
+/* SENSOR INFO ------------------------------------ */
+
+.sensor_info {
+    font-size   : 18px;
+    font-weight : bold;
+    color       : green;
+}
+
+
+/* DETECTION TITLE IMAGE --------------------------- */
+
+.detection_title_image  {
+}
+
+
+/* MOVE UP BUTTON ---------------------------------- */
+
+#move_up {
+    display       : none;
+
+    position      : fixed;
+    bottom        : 40px;
+    right         : 20px;
+    background    : #333333;
+    border        : 3px solid black;
+    opacity       : 30%;
+
+    height        : 30px;
+    width         : 30px;
+    border-radius : 20px;
+
+    z-index       : 60;
+}
+
+#move_up:hover {
+    opacity       : 60%;
+}
+
+#move_up_arrow {
+    position : relative;
+    top: 9px;
+    left: 5px;
+
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+}

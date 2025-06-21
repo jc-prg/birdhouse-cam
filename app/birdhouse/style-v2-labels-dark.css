@@ -1,0 +1,26 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    :root {
+        --label-download: darkred;
+        --label-download-text: white;
+        --label-download-glow: #777;
+        --label-download-hover: #772;
+
+        --label-detection: blue;
+        --label-detection-text: white;
+        --label-detection-glow: #777;
+        --label-detection-hover: #772;
+
+        --label-detection-function: #0000AA;
+        --label-detection-function-text: white;
+        --label-detection-function-glow: #777;
+        --label-detection-function-hover: #772;
+
+        --label-other: darkgreen;
+        --label-other-text: white;
+        --label-other-glow: #772;
+        --label-other-hover: #772;
+    }
+}

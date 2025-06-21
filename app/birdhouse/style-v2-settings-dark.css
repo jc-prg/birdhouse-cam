@@ -1,0 +1,10 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    :root {
+        --setting-bg-background: #cccccc;
+        --setting-bg-border: #111111;
+        --setting-bg-header-empty: #111111;
+    }
+}

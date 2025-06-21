@@ -1395,6 +1395,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.weather_active = self.config.param["weather"]["active"]
         self.weather_sunrise = None
         self.weather_sunset = None
+
         self.camera_light_missing = True
         self.camera_light_date = ""
         self.camera_light_mode = ""
@@ -1460,8 +1461,15 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.record_temp_threshold = None
         self.recording = False
 
+        self.record_video_wait = False
+        self.record_video_max_fps = self.param["image"]["framerate"]
+        self.record_video_min_wait = 1 / self.record_video_max_fps
+        self.record_video_last = 0
+
         self.camera_stream_raw = None
         self.camera_streams = {}
+        self.camera_streams_max = 0
+        self.camera_statistics_time = 0
         self.available_devices = {}
 
         self.date_last = self.config.local_time().strftime("%Y-%m-%d")
@@ -1756,7 +1764,6 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         Start recording for livestream, save images every x seconds, reload camera and connected devices.
         """
-        similarity = 0
         count_paused = 0
         sensor_last = ""
 
@@ -1769,98 +1776,116 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             start_time_control = time.time()
             stamp = current_time.strftime('%H%M%S')
 
-            if self.config.update["camera_" + self.id]:
-                self.logging.info("Camera '" + self.id + "' updated (1): " + str(self.config.update["camera_" + self.id]))
-                self.config_update = self.config.update["camera_" + self.id]
-                self.config.update["camera_" + self.id] = False
+            while self.config.camera_capture_active:
+                time.sleep(0.1)
 
-            if self.config.update_config["camera_" + self.id]:
-                self.logging.info("Camera '" + self.id + "' updated (2): " + str(self.config.update_config["camera_" + self.id]))
-                self.config_update_small = self.config.update_config["camera_" + self.id]
-                self.config.update_config["camera_" + self.id] = False
-                self.logging.info("update " + str(self.config_update) + " | small " + str(self.config_update_small) + " | reload " + str(self.reload_camera))
+            if not self.video.recording:
+                if self.config.update["camera_" + self.id]:
+                    self.logging.info("Camera '" + self.id + "' updated (1): " + str(self.config.update["camera_" + self.id]))
+                    self.config_update = self.config.update["camera_" + self.id]
+                    self.config.update["camera_" + self.id] = False
+
+                if self.config.update_config["camera_" + self.id]:
+                    self.logging.info("Camera '" + self.id + "' updated (2): " + str(self.config.update_config["camera_" + self.id]))
+                    self.config_update_small = self.config.update_config["camera_" + self.id]
+                    self.config.update_config["camera_" + self.id] = False
+                    self.logging.info("update " + str(self.config_update) + " | small " + str(self.config_update_small) + " | reload " + str(self.reload_camera))
 
             if self.active:
                 start_time_processing = time.time()
 
-                # reset some settings end of the day
-                if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
-                    self.record_temp_threshold = None
-                    self.date_last = self.config.local_time().strftime("%Y-%m-%d")
+                if not self.video.recording:
+                    # reset some settings end of the day
+                    if self.date_last != self.config.local_time().strftime("%Y-%m-%d"):
+                        self.record_temp_threshold = None
+                        self.date_last = self.config.local_time().strftime("%Y-%m-%d")
 
-                # if error reload from time to time
-                if self.if_reconnect_on_error():
-                    self.reconnect(directly=False)
+                    # if error reload from time to time
+                    if self.if_reconnect_on_error():
+                        self.reconnect(directly=False)
 
-                # check if camera is paused, wait with all processes ...
-                if not self._paused:
-                    count_paused = 0
+                    # check if camera is paused, wait with all processes ...
+                    if not self._paused:
+                        count_paused = 0
 
-                while self._paused and self._running:
-                    if count_paused == 0:
-                        self.logging.info("Recording images with " + self.id + " paused ...")
-                        count_paused += 1
-                    time.sleep(1)
+                    while self._paused and self._running:
+                        if count_paused == 0:
+                            self.logging.info("Recording images with " + self.id + " paused ...")
+                            count_paused += 1
+                        time.sleep(1)
 
                 # Image and / or video recording ...
                 if not self.error and not self.config_update and not self.reload_camera:
 
                     # Video recording
                     if self.video.recording:
+                        self.slow_down_streams(False)
                         self.video_recording(current_time)
 
                     # Image recording (only while not recording video)
                     elif self.record:
                         start_time_record = time.time()
-                        self.image_recording(current_time, stamp, similarity, sensor_last)
+                        self.image_recording(current_time, stamp, sensor_last)
                         self.config.set_processing_performance("camera_recording_image", self.id, start_time_record)
                         self.image_recording_auto_light()
 
                     # Check and record active streams
                     self.measure_usage()
 
-                # Slow down if other process with higher priority is running or error
-                if (self.if_other_prio_process(self.id)
-                        or self.if_only_lowres()
-                        or self.video.processing
-                        or self.error or not self.active):
+                if not self.video.recording:
 
-                    self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
-                                       "lowres=" + str(self.if_only_lowres()) + "; " +
-                                       "processing=" + str(self.video.processing) + "; " +
-                                       "error=" + str(self.error) + "; " +
-                                       "active=" + str(self.active))
-                    self.slow_down_streams(True)
-                else:
-                    self.slow_down_streams(False)
+                    # Slow down if other process with higher priority is running or error
+                    if (self.if_other_prio_process(self.id)
+                            or self.if_only_lowres()
+                            or self.video.processing
+                            or self.error or not self.active):
+
+                        self.logging.debug("prio=" + str(self.if_other_prio_process(self.id)) + "; " +
+                                           "lowres=" + str(self.if_only_lowres()) + "; " +
+                                           "processing=" + str(self.video.processing) + "; " +
+                                           "error=" + str(self.error) + "; " +
+                                           "active=" + str(self.active))
+                        self.slow_down_streams(True)
+                    else:
+                        self.slow_down_streams(False)
 
                 self.config.set_processing_performance("camera_processing_image", self.id, start_time_processing)
 
-            # start or reload camera connection
-            if self.config_update_small:
-                self.logging.info("Updating configuration for CAMERA '" + self.id + "' (" +
-                                  self.param["name"] + "/" + str(self.param["active"]) + ") ...")
-                self.update_main_config(reload=False)
+            if not self.video.recording:
 
-            if self.config_update or self.reload_camera:
-                start_time_update = time.time()
-                self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
-                                  self.param["name"] + "/" + str(self.param["active"]) + ") ...")
-                self.update_main_config()
-                self.set_streams_active(active=True)
-                self.reconnect(directly=True)
-                self.config.set_processing_performance("camera_reconnect", self.id, start_time_update)
+                # start or reload camera connection
+                if self.config_update_small:
+                    self.logging.info("Updating configuration for CAMERA '" + self.id + "' (" +
+                                      self.param["name"] + "/" + str(self.param["active"]) + ") ...")
+                    self.update_main_config(reload=False)
 
-            self.config.set_processing_performance("camera_control", self.id, start_time_control)
+                if self.config_update or self.reload_camera:
+                    start_time_update = time.time()
+                    self.logging.info("Updating configuration and reconnecting CAMERA '" + self.id + "' (" +
+                                      self.param["name"] + "/" + str(self.param["active"]) + ") ...")
+                    self.update_main_config()
+                    self.set_streams_active(active=True)
+                    self.reconnect(directly=True)
+                    self.config.set_processing_performance("camera_reconnect", self.id, start_time_update)
+
+                self.config.set_processing_performance("camera_control", self.id, start_time_control)
 
             # Define thread priority and waiting time depending on running tasks
-            if self.active and self.record and not self.video.recording and not self.error:
+            if self.video.recording:
+                if self.record_video_last > 0:
+                    wait = self.record_video_min_wait - (time.time() - self.record_video_last)
+                    if wait > 0:
+                        time.sleep(wait)
+                self.record_video_last = time.time()
+                #self.thread_wait(wait_time=self.record_video_min_wait)
+
+            elif self.active and self.record and not self.error:
                 self.thread_set_priority(2)
                 self.thread_wait()
+
             elif not self.active or self.error:
                 self.thread_set_priority(7)
-                if self.video.recording:
-                    self.thread_wait(wait_time=0.04)
+                self.thread_wait()
 
             self.thread_control()
 
@@ -1963,18 +1988,18 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_time = self.camera_streams["camera_hires"].read_stream_image_time()
             image_delay = time.time() - image_time
 
-            if self.image_last_id == 0 or self.image_last_id != image_id:
+            if self.image_last_id == 0 or self.image_last_id != image_id or not self.record_video_wait:
                 image = self.camera_streams["camera_hires"].read_stream("record")
                 self.image_last_id = image_id
             else:
                 return
 
-            self.video.image_size = self.image_size
-            self.video.create_video_image(image=image, delay=image_delay)
+            #self.video.image_size = self.image_size
+            self.video.save_video_image(image=image, delay=image_delay)
 
-            if self.image_size == [0, 0]:
-                self.image_size = self.image.size_raw(image)
-                self.video.image_size = self.image_size
+            #if self.image_size == [0, 0]:
+            #    self.image_size = self.image.size_raw(image)
+            #    self.video.image_size = self.image_size
 
             self.logging.debug(".... Video Recording: " + str(self.video.info["stamp_start"]) + " -> " + str(
                 current_time.strftime("%H:%M:%S")))
@@ -1986,6 +2011,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         start recording and set current image size
         """
         if not self.video.if_running():
+            self.record_video_last = 0
             self.video.start()
             self.video.image_size = self.image_size
 
@@ -1998,14 +2024,98 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         return self.video.record_cancel()
 
-    def image_recording(self, current_time, stamp, similarity, sensor_last):
+    def image_recording_max(self):
+        """
+        record image in the max resolution
+        """
+        if self.error:
+            return
+
+        current_time = self.config.local_time()
+        stamp = current_time.strftime("%H%M%S")
+        try:
+            self.config.camera_capture_active = True
+            time.sleep(0.5)
+            current_resolution = self.camera.get_resolution()
+            self.logging.info("Recording an image with maximum resolution: max=" + str(self.max_resolution) + "; current=" +str(current_resolution))
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, self.max_resolution[0])
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, self.max_resolution[1])
+            time.sleep(1)
+            image_max_res = self.camera.read()
+            time.sleep(0.5)
+            image_max_res = self.camera.read()
+            if image_max_res is not None and self.param["image"]["rotation"] != 0:
+                image_max_res = self.image.rotate_raw(image_max_res, self.param["image"]["rotation"])
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_WIDTH, current_resolution[0])
+            self.camera.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, current_resolution[1])
+            time.sleep(0.5)
+            self.config.camera_capture_active = False
+        except Exception as e:
+            self.logging.info("Could not grab a max resolution image: " + str(e))
+            image_max_res = None
+            self.config.camera_capture_active = False
+            return
+
+        self.logging.debug(" ...... check if recording")
+        start_time = time.time()
+        image_hires = image_max_res
+
+        # if no error format and analyze image
+        if image_hires is not None and not self.image.error and image_hires is not None and len(image_hires) > 0:
+
+            image_lowres = self.image.resize_raw(raw=image_hires, scale_percent=self.param["image"]["preview_scale"])
+            self.brightness = self.image.get_brightness_raw(image_hires)
+            height, width, color = image_hires.shape
+            preview_scale = self.param["image"]["preview_scale"]
+
+            similarity = "100"
+            image_info = {"camera": self.id, "compare": (0,0),
+                          "date": current_time.strftime("%d.%m.%Y"), "datestamp": current_time.strftime("%Y%m%d"),
+                          "detections": [], "hires": self.img_support.filename("hires", stamp, self.id),
+                          "hires_size": [width, height], "hires_brightness": self.brightness, "info": {},
+                          "lowres": self.img_support.filename("lowres", stamp, self.id),
+                          "lowres_size": [round(width * preview_scale / 100), round(height * preview_scale / 100)],
+                          "similarity": similarity, "sensor": {}, "time": current_time.strftime("%H:%M:%S"),
+                          "type": "image", "weather": {}, "hires_max_resolution": True, "favorit": "1"}
+
+        # else if error save at least sensor data
+        else:
+            self.record_image_error = True
+            if image_hires is None:
+                self.record_image_error_msg = ["img_error='empty image from camera, but no camera error' (None)"]
+            else:
+                self.record_image_error_msg = ["img_error=" + str(self.image.error) +
+                                               "; img_len=" + str(len(image_hires))]
+            return
+
+        self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
+
+        # if no error save image files
+        if not self.error and not self.image.error and image_hires is not None:
+            path_lowres = os.path.join(self.config.db_handler.directory("images"),
+                                       self.img_support.filename("lowres", stamp, self.id))
+            path_hires = os.path.join(self.config.db_handler.directory("images"),
+                                      self.img_support.filename("hires", stamp, self.id))
+            self.logging.debug("WRITE: " + str(path_lowres))
+            self.image.write(filename=path_hires, image=image_hires)
+            self.image.write(filename=path_lowres, image=image_lowres)
+
+            self.record_image_error = False
+            self.record_image_error_msg = []
+            self.record_image_last = time.time()
+            self.record_image_last_string = self.config.local_time().strftime('%d.%m.%Y %H:%M:%S')
+
+        del image_hires, image_lowres
+        time.sleep(self._interval)
+        self.previous_stamp = stamp
+
+    def image_recording(self, current_time="", stamp="", sensor_last=""):
         """
         record images as defined in settings
 
         Args:
             current_time (datetime): current time in datetime format
             stamp (str): time stamp of measurement
-            similarity (float): similarity value (not used at the moment)
             sensor_last (str): last time stamp of sensor measurement
         """
         if self.error:
@@ -2061,6 +2171,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
                     "type": "image",
                     "weather": {}
                 }
+
                 self.previous_image = image_compare
                 sensor_data = {"activity": round(100 - float(similarity), 1)}
 
@@ -2085,7 +2196,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             image_info["info"]["duration_1"] = round(time.time() - start_time, 3)
             self.config.queue.entry_add(config="images", date="", key=stamp, entry=image_info)
 
-            if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last:
+            if int(self.config.local_time().strftime("%M")) % 5 == 0 and sensor_stamp != sensor_last and sensor_last != "":
                 self.logging.debug("Write sensor data to file ...")
                 self.config.queue.entry_add(config="sensor", date="", key=sensor_stamp, entry=sensor_data)
 
@@ -2347,6 +2458,7 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         """
         if init:
             self.statistics.register(self.id.lower() + "_streams", "Streams " + self.id.upper())
+            self.statistics.register(self.id.lower() + "_streams_max", "Max Streams " + self.id.upper())
             self.statistics.register(self.id.lower() + "_framerate", "Framerate " + self.id.upper() + " [fps]")
             self.statistics.register("config_img_record_"+self.id.lower(), "Record Image " + self.id.upper() + " [s]")
             if birdhouse_env["statistics_error"]:
@@ -2363,7 +2475,14 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
             for stream_id in self.camera_streams:
                 count += self.camera_streams[stream_id].get_active_streams()
 
+            if self.camera_statistics_time != self.config.last_wrote_statistics:
+                self.camera_streams_max = count
+                self.camera_statistics_time = self.config.last_wrote_statistics
+            elif count > self.camera_streams_max:
+                self.camera_streams_max = count
+
             self.statistics.set(self.id.lower() + "_streams", count)
+            self.statistics.set(self.id.lower() + "_streams_max", self.camera_streams_max, value_type="max")
             self.statistics.set(self.id.lower() + "_framerate", self.camera_stream_raw.get_framerate())
             if birdhouse_env["statistics_error"]:
                 self.statistics.set(self.id.lower() + "_error", self.if_error())
@@ -2952,6 +3071,8 @@ class BirdhouseCamera(threading.Thread, BirdhouseCameraClass):
         self.detect_settings = self.param["object_detection"]
         self.camera_scan_source = None
         self.camera_light_mode = ""
+        self.record_video_max_fps = self.param["image"]["framerate"]
+        self.record_video_min_wait = 1 / self.record_video_max_fps
 
         self.image_size = [0, 0]
         self.image_size_lowres = [0, 0]

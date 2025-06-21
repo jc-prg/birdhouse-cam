@@ -113,6 +113,99 @@ function birdhouse_imageOverlayToggle(overlay_id, select="") {
         }
     }
 
+/*
+* open image in fullscreen mode
+*
+* @param (string) imageId: id of image or even better its container to be opened in fullscreen mode
+*/
+function birdhouse_imageFullscreenToggle(imageId) {
+    const img = document.getElementById(imageId);
+    const container = document.createElement('div');
+
+    // Style the container for fullscreen
+    container.id = 'fullscreen_container';
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.backgroundColor = 'black';
+    container.style.display = 'flex';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    container.style.zIndex = '9999';
+    container.style.cursor = 'zoom-out';
+
+    // Clone the image to avoid layout disruption
+    const fullscreenImg = img.cloneNode();
+    fullscreenImg.style.width = '100vw';
+    fullscreenImg.style.height = '100vh';
+    fullscreenImg.style.maxWidth = '100%';
+    fullscreenImg.style.maxHeight = '100%';
+    fullscreenImg.style.objectFit = 'contain'; // or 'cover' based on preference
+    fullscreenImg.style.border = "0px";
+
+    // Make the cloned image clickable to exit fullscreen
+    fullscreenImg.onclick = () => document.exitFullscreen();
+    fullscreenImg.ontouchstart = () => birdhouse_exitFullscreen();
+    container.ontouchstart = () => birdhouse_exitFullscreen();
+
+    container.appendChild(fullscreenImg);
+    document.body.appendChild(container);
+
+    // Check for full-screen API support
+    if (container.requestFullscreen) {
+        // For most modern browsers
+        container.requestFullscreen().then(() => {
+            container.setAttribute('id', 'fullscreen_container');
+        }).catch((err) => {
+            console.error(`Error entering fullscreen: ${err.message}`);
+        });
+    } else if (container.webkitRequestFullscreen) {
+        // For iOS Safari and older webkit browsers
+        container.webkitRequestFullscreen();
+    }
+
+    // Exit fullscreen clean-up
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+        const container = document.getElementById('fullscreen_container');
+        if (container) container.remove();
+    }
+});
+
+document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement) {
+        const container = document.getElementById('fullscreen_container');
+        if (container) container.remove();
+    }
+});
+
+}
+
+/*
+* close fullscreen mode (iPhone and default browser)
+*/
+function birdhouse_exitFullscreen() {
+
+    if (document.getElementById('fullscreen_container')) {
+        setTimeout(function(){
+            // Standard Fullscreen Exit
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            // iOS Safari fullscreen exit
+            else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+
+            // Clean up fullscreen container
+            const container = document.getElementById('fullscreen_container');
+            if (container) container.remove();
+            }, 500);
+        }
+    }
+
 /**
 * create overlay with playable video
 *
@@ -156,19 +249,7 @@ function birdhouse_videoOverlay(filename, description="", swipe=false) {
 * @param (boolean) status - if left empty toggle, else actively show or hide
 */
 function birdhouse_videoOverlayToggle(status="") {
-        video_edit1 = document.getElementById("camera_video_edit");
-        video_edit2 = document.getElementById("camera_video_edit_overlay");
-        if (video_edit1 != null) {
-        	if (status == "") {
-	        	if (video_edit1.style.display == "none")    { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
-        		else                                        { video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
-        		}
-        	else if (status == false) { video_edit1.style.display = "none";  video_edit2.style.display = "none"; }
-        	else if (status == true)  { video_edit1.style.display = "block"; video_edit2.style.display = "block"; }
-        	}
-	else {
-	        console.error("birdhouse_videoOverlayToggle: Video edit doesn't exist.");
-		}
+    toggleVideoEdit(status);
 	}
 
 /**
@@ -238,7 +319,7 @@ function birdhouse_overlayShowByIndex(index) {
         birdhouse_videoOverlay(img_data["hires"], img_data["description"], img_data["swipe"]);
         }
     else if (img_data["hires_stream"]) {
-        var [hires, stream_uid]     = birdhouse_StreamURL(app_active_cam, img_data["hires_stream"], "stream_list_5", true, "OVERLAY");
+        var [hires, stream_uid]     = birdhouse_StreamURL(app_active.cam, img_data["hires_stream"], "stream_list_5", true, "OVERLAY");
         birdhouse_imageOverlay(hires, description,  img_data["hires_detect"], img_data["swipe"], "overlay_image", img_data["favorite"]);
         }
     else {

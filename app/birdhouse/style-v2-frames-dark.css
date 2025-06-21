@@ -1,0 +1,27 @@
+/* dark scheme */
+
+@media (prefers-color-scheme: dark) {
+
+    :root {
+        --frames-shadow: rgba(230, 230, 230, 0.1);
+        --frames-border: black;
+    }
+
+    /* FRAME ELEMENTS --------------------------------- */
+
+    .frame_column      {
+        background-color : #222222;
+        border           : #333333 1px solid;
+        color            : #dddddd;
+        }
+
+    .frame_column img    { opacity: 1.0; }
+
+
+    /* GROUP SEPARATORS ------------------------------- */
+
+    .separator_group {
+         background-color : #444444;
+         color            : #eeeeee;
+     }
+}

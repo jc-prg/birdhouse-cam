@@ -36,6 +36,7 @@ class BirdhouseClass(object):
         self._running = True
         self._paused = False
         self._processing = False
+        self._recording = False
         self._thread_priority = 3                      # range 0..4 (1..5 via self.threat_set_priority)
         self._thread_waiting_times = [0.2, 0.5, 1, 2, 4, 8, 15, 30, 55, 115]  # to be used depending on priority
         self._thread_slowdown = False
@@ -280,6 +281,7 @@ class BirdhouseClass(object):
                 "health_signal": time.time(),
                 "running": self.if_running(),
                 "processing": self.if_processing(),
+                "recording": self.if_recording(),
                 "paused": self.if_paused(),
                 "error": self.if_error(),
                 "error_msg": self.if_error(message=True)
@@ -323,10 +325,19 @@ class BirdhouseClass(object):
 
     def if_processing(self):
         """
-        External check if paused
+        External check if processing
 
         Returns:
             bool: Status if processing is ongoing
+        """
+        return self._processing
+
+    def if_recording(self):
+        """
+        External check if recording
+
+        Returns:
+            bool: Status if recording is ongoing
         """
         return self._processing
 

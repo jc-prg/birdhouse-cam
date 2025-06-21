@@ -7,7 +7,7 @@ import modules.presets as presets
 from modules.presets import *
 from modules.presets import view_logging
 from modules.bh_class import BirdhouseClass
-
+from urllib.parse import unquote
 
 class BirdhouseViewTools(BirdhouseClass):
 
@@ -91,7 +91,7 @@ class BirdhouseViewTools(BirdhouseClass):
 
         for link in link_list:
             json[link] = {
-                "link": presets.birdhouse_pages[link][2],
+                "link": presets.birdhouse_pages[link][0],
                 "camera": cam_link,
                 "description": presets.birdhouse_pages[link][0],
                 "position": count
@@ -533,6 +533,17 @@ class BirdhouseViewFavorite(BirdhouseClass):
             content = self.config.db_handler.read_cache("favorites")
             if "entries" not in content or "groups" not in content:
                 content = self.views
+            else:
+                for stamp in content["entries"]:
+                    for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor", "size","audio","fps"]:
+                        if key in content["entries"][stamp]:
+                            del content["entries"][stamp][key]
+
+                    if "detections" in content["entries"][stamp]:
+                        content["entries"][stamp]["detections"] = [
+                            {k: det[k] for k in ("label", "class") if k in det}
+                            for det in content["entries"][stamp]["detections"]
+                        ]
         else:
             content = self.views
 
@@ -1656,7 +1667,7 @@ class BirdhouseViewArchive(BirdhouseClass):
         elif not database_ok and config_available:
             self.logging.debug("  -> read from file")
             # file_data = self.config.db_handler.json.read(config_file)
-            file_data = self.config.db_handler.json.read(config="backup", date=archive_directory)
+            file_data = self.config.db_handler.read(config="backup", date=archive_directory, db_type="json")
             if file_data != {}:
                 self.logging.debug("  -> write to DB: " + str(file_data.keys()))
                 file_data["info"]["changed"] = False
@@ -2094,6 +2105,321 @@ class BirdhouseViewObjects(BirdhouseClass):
         self.force_reload = False
 
 
+class BirdhouseViewDiary(BirdhouseClass):
+    """
+    class to create and update object/bird detection view
+    """
+
+    def __init__(self, config):
+        """
+        Constructor method for initializing the class.
+
+        Args:
+            config (modules.config.BirdhouseConfig): reference to main config object
+
+        """
+        BirdhouseClass.__init__(self, class_id="view-day", config=config)
+
+        self.create_data = {
+            "info": {},
+            "broods": {},
+            "entries": {}
+        }
+        self.brood_data = {
+            "date": "",
+            "data": {}
+        }
+        self.last_update = time.time()
+        self.interval_update = 1 * 60
+
+        self.logging.info("Connected diary view creation handler.")
+
+    def get_data(self):
+        """
+        get diary data from the database. if not exist, return empty data set.
+        """
+        data = self.config.db_handler.read_cache("diary")
+
+        archive = self.config.db_handler.read_cache("backup_info")
+        archive_keys = []
+        for key in archive:
+            if "entries" in archive[key]:
+                for day in archive[key]["entries"]:
+                    if day not in archive_keys:
+                        archive_keys.append(day)
+
+        videos = self.config.db_handler.read_cache("videos")
+        video_keys = []
+        for key in videos:
+            k_date, k_time = key.split("_")
+            if k_date not in video_keys:
+                video_keys.append(k_date)
+
+        if data == {}:
+            data = self.create_data
+            self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        data["archive"] = archive_keys
+        data["videos"] = video_keys
+
+        return data
+
+    def get_active_stage(self, data, today=None):
+        """
+        Calculating the current date of an active brood and returning relevant information if exist
+
+        Args:
+            data (dict): diary data
+            today (str): date to be analyze (YYYYMMDD)
+
+        Returns:
+            dict|None: detail information on the current brood if exist
+        """
+        self.logging.debug("Calculating the current date of an active brood")
+
+        # Set today's date as YYYYMMDD string, or use current date if not given
+        today = today or datetime.today().strftime("%Y%m%d")
+
+        # Define valid stage types
+        valid_types = {"1", "2", "3", "4", "5", "6"}
+        stage_states = {}
+
+        # Sort the entry dates
+        for date in sorted(data["entries"]):
+            if date > today:
+                continue  # Future data is irrelevant
+
+            for event in data["entries"][date].values():
+                t = event.get("type")
+                if t not in valid_types:
+                    continue
+
+                brood = event.get("brood")
+                value = event.get("value")
+
+                key = (t, brood)
+
+                if value == "start":
+                    stage_states[key] = {
+                        "start_date": date,
+                        "ended": False
+                    }
+                elif value in ("end", "cancel") and key in stage_states:
+                    stage_states[key]["ended"] = True
+
+        # Find the most recent stage that is currently running
+        active_stage = None
+        for (stage_type, brood), state in stage_states.items():
+
+            if  active_stage is not None:
+                self.logging.debug("CHECK brood state: " + str(stage_type) + "-" + str(state) +
+                                  " | state > active: " + str(state["start_date"]) + " > " + str(active_stage["start_date"]))
+            else:
+                self.logging.debug("CHECK brood state: " + str(stage_type) + "-" + str(state) +
+                                  " | state > active: " + str(state["start_date"]) + " > None")
+
+            if not state["ended"] and state["start_date"] <= today:
+                if active_stage is None or state["start_date"] > active_stage["start_date"]:
+                    active_stage = {
+                        "type": stage_type,
+                        "brood": brood,
+                        "start_date": state["start_date"]
+                    }
+
+        if active_stage:
+            start_date_obj = datetime.strptime(active_stage["start_date"], "%Y%m%d")
+            today_date_obj = datetime.strptime(today, "%Y%m%d")
+            days_since_start = (today_date_obj - start_date_obj).days
+
+            if active_stage["brood"] in data["broods"]:
+                brood = data["broods"][active_stage["brood"]]
+            else:
+                brood = {"title": "UNKNOWN", "bird": "BIRD", "comment": ""}
+
+            return {
+                "stage": active_stage["type"],
+                "brood": active_stage["brood"],
+                "brood_details": brood,
+                "days_since_start": days_since_start
+            }
+
+        return None  # No stage is currently active
+
+    def get_current_state(self):
+        """
+        get information on current brood, if one exists
+
+        Returns:
+            dict: information on current brood
+        """
+        all_data = self.get_data()
+        milestones = all_data["entries"]
+        today = self.config.local_time().strftime('%Y%m%d')
+
+        if self.brood_data["date"] == "" or self.last_update + self.interval_update < time.time():
+
+            self.brood_data["data"] = self.get_active_stage(all_data)
+            self.logging.debug(str(self.brood_data["data"]))
+            self.last_update = time.time()
+
+        return self.brood_data["data"]
+
+    def edit_milestone(self, date, title, entry):
+        """
+        edit or create a milestone in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            date (str): date of the milestone
+            title (str): key of the milestone, also used as title
+            entry (dict): entry with all values from the milestone
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a milestone in the diary ("+date+"/"+title+").")
+        data = self.get_data()
+        title = unquote(title)
+        milestones = data["entries"].copy()
+        replace_values = ["brood", "value", "comment", "type"]
+
+        if date in milestones and title in milestones[date]:
+            self.logging.info("Edit Milestone  : " + date + " / " + title)
+            edited_entry = milestones[date][title]
+            self.logging.info("                : " + str(edited_entry))
+            self.logging.info("                : " + str(entry))
+            for key in replace_values:
+                edited_entry[key] = entry[key]
+
+            self.logging.info("                : " + str(edited_entry))
+            if entry["title"] != title:
+                del milestones[date][title]
+                milestones[date][entry["title"]] = edited_entry
+
+        else:
+            self.logging.info("Create Milestone  : " + date + " / " + title)
+            if date not in milestones:
+                milestones[date] = {}
+            new_entry = {}
+            for key in replace_values:
+                new_entry[key] = entry[key]
+            milestones[date][entry["title"]] = new_entry
+
+        data["entries"] = milestones.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "edit_milestone",
+            "date": date,
+            "title": title
+        }
+        return response
+
+    def delete_milestone(self, date, title):
+        """
+        delete a milestone in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            date (str): date of the milestone
+            title (str): key of the milestone, also used as title
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a milestone in the diary ("+date+"/"+title+").")
+        data = self.get_data()
+        title = unquote(title)
+        milestones = data["entries"].copy()
+
+        if date in milestones and title in milestones[date]:
+            del milestones[date][title]
+
+        data["entries"] = milestones.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "delete_milestone",
+            "date": date,
+            "title": title
+        }
+        return response
+
+    def edit_brood(self, entry_id, title, entry):
+        """
+        edit or create a brood in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            entry_id (str): id of the brood
+            title (str): not used
+            entry (dict): entry with all values from the brood
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a brood in the diary ("+entry_id+"/"+title+").")
+        data = self.get_data()
+        title = unquote(title)
+        broods = data["broods"].copy()
+        replace_values = ["title", "bird", "comment"]
+
+        if entry_id in broods:
+            self.logging.info("Edit brood  : " + entry_id + " / " + title)
+            edited_entry = broods[entry_id]
+            self.logging.info("                : " + str(edited_entry))
+            self.logging.info("                : " + str(entry))
+            for key in replace_values:
+                edited_entry[key] = entry[key]
+
+            self.logging.info("                : " + str(edited_entry))
+            if entry["id"] != entry_id:
+                del broods[entry_id]
+                broods[entry["id"]] = edited_entry
+
+        else:
+            self.logging.info("Create brood  : " + entry_id + " / " + title)
+            new_entry = {}
+            for key in replace_values:
+                new_entry[key] = entry[key]
+            broods[entry["id"]] = new_entry
+
+        data["broods"] = broods.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "edit_brood",
+            "entry": entry_id,
+            "title": title
+        }
+        return response
+
+    def delete_brood(self, entry_id, title=""):
+        """
+        delete a brood in the diary // under construction // --> ensure this is handled via queue in a later stage also
+
+        Args:
+            entry_id (str): brood id
+            title (str): not used
+
+        Returns:
+            dict: API response
+        """
+        self.logging.info("Create or save a milestone in the diary ("+entry_id+"/"+title+").")
+        data = self.get_data()
+        broods = data["broods"].copy()
+
+        if entry_id in broods:
+            del broods[entry_id]
+
+        data["broods"] = broods.copy()
+        self.config.db_handler.write(config="diary", date="", data=data, create=True)
+
+        response = {
+            "info": "delete_brood",
+            "entry": entry_id,
+            "title": title
+        }
+        return response
+
+
 class BirdhouseViews(threading.Thread, BirdhouseClass):
     """
     Class to create, update and deliver views for the birdhouse app
@@ -2132,10 +2458,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         self.archive = BirdhouseViewArchive(config, self.tools, self.camera)
         self.favorite = BirdhouseViewFavorite(config, self.tools)
         self.object = BirdhouseViewObjects(config, self.tools, self.camera)
+        self.diary = BirdhouseViewDiary(config)
 
         self.favorite.load_from_archives = False
         self.archive.load_from_archives = False
         self.object.load_from_archives = False
+        self.view_cache = {}
 
     def run(self):
         """
@@ -2225,9 +2553,9 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             "view": "index"
         }
         if param["admin_allowed"]:
-            content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup", "cam_info"))
+            content["links"] = self.tools.print_links_json(link_list=("favorite", "today", "backup", "settings"))
         else:
-            content["links"] = self.tools.print_links_json(link_list=("favorit", "today", "backup"))
+            content["links"] = self.tools.print_links_json(link_list=("favorite", "videos", "today", "backup"))
 
         return content
 
@@ -2318,7 +2646,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         # else read files from current day and create vars, links ...
         elif self.config.db_handler.exists(config="images"):
             backup = False
-            files_all = self.config.db_handler.read_cache(config="images")
+            files_all_temp = self.config.db_handler.read_cache(config="images")
+            files_all = files_all_temp.copy()
             files_weather = self.config.db_handler.read_cache(config="weather")
             files_sensor = self.config.db_handler.read_cache(config="sensor")
             files_video = self.config.db_handler.read_cache(config="videos")
@@ -2358,6 +2687,16 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     files_all[stamp]["time"] = stamp[0:2] + ":" + stamp[2:4] + ":" + stamp[4:6]
                 if "to_be_deleted" in files_all[stamp] and int(files_all[stamp]["to_be_deleted"]) == 1:
                     continue
+
+                for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor", "size"]:
+                    if key in files_all[stamp]:
+                        del files_all[stamp][key]
+
+                if "detections" in files_all[stamp]:
+                    files_all[stamp]["detections"] = [
+                        {k: det[k] for k in ("label", "class") if k in det}
+                        for det in files_all[stamp]["detections"]
+                    ]
 
                 if ((int(stamp) < int(time_now) or time_now == "000000")
                         and files_all[stamp]["datestamp"] == date_today) or backup:
@@ -2622,7 +2961,8 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
 
         count = 0
         category = "/current/"
-        files_all = self.config.db_handler.read_cache(config="images")
+        files_all_temp = self.config.db_handler.read_cache(config="images")
+        files_all = files_all_temp.copy()
         data_weather = self.config.db_handler.read_cache(config="weather")
         data_sensor = self.config.db_handler.read_cache(config="sensor")
 
@@ -2637,43 +2977,73 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                       "20", "21", "22", "23"])
         hours.sort(reverse=True)
 
-        # Today
+
+        # group entries by hours and check cache
+        entries_by_hours = {}
+        entries_from_cache = {}
         for hour in hours:
+            entries_by_hours[hour] = []
             hour_min = hour + "0000"
             hour_max = str(int(hour) + 1) + "0000"
-            files_part = {}
-            count_diff = 0
             stamps = list(reversed(sorted(files_all.keys())))
             for stamp in stamps:
                 if int(time_now) >= int(stamp) >= int(hour_min) and int(stamp) < int(hour_max):
                     if "datestamp" in files_all[stamp] and files_all[stamp]["datestamp"] == date_today:
                         if "camera" in files_all[stamp] and files_all[stamp]["camera"] == which_cam:
-                            threshold = self.camera[which_cam].param["similarity"]["threshold"]
-                            if "similarity" in files_all[stamp] and float(files_all[stamp]["similarity"]) < float(
-                                    threshold):
-                                if float(files_all[stamp]["similarity"]) > 0:
-                                    count_diff += 1
-                            files_part[stamp] = files_all[stamp]
-                            if "type" not in files_part[stamp]:
-                                files_part[stamp]["type"] = "image"
-                            files_part[stamp]["detect"] = self.camera[which_cam].img_support.differs(
-                                file_info=files_part[stamp])
-                            files_part[stamp]["category"] = category + stamp
-                            files_part[stamp]["directory"] = "/" + self.config.db_handler.directory("images",
-                                                                                                    "", False) + "/"
-                            count += 1
+                            entries_by_hours[hour].append(stamp)
 
-                            if "lowres_size" in files_part[stamp]:
-                                if files_part[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
-                                    content["max_image_size"]["lowres"][0] = files_part[stamp]["lowres_size"][0]
-                                if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
-                                    content["max_image_size"]["lowres"][1] = files_part[stamp]["lowres_size"][1]
+            if "today_complete_"+which_cam+"_"+hour in self.view_cache and len(self.view_cache["today_complete_"+which_cam+"_"+hour]) == len(entries_by_hours[hour]):
+                entries_from_cache[hour] = True
+            else:
+                entries_from_cache[hour] = False
 
-                            if "hires_size" in files_part[stamp]:
-                                if files_part[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
-                                    content["max_image_size"]["hires"][0] = files_part[stamp]["hires_size"][0]
-                                if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
-                                    content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+            self.view_cache["today_complete_"+which_cam+"_"+hour] = entries_by_hours[hour]
+
+        for hour in hours:
+            files_part = {}
+            count_diff = 0
+            if not entries_from_cache[hour]:
+                for stamp in entries_by_hours[hour]:
+                    threshold = self.camera[which_cam].param["similarity"]["threshold"]
+                    if "similarity" in files_all[stamp] and float(files_all[stamp]["similarity"]) < float(
+                            threshold):
+                        if float(files_all[stamp]["similarity"]) > 0:
+                            count_diff += 1
+                    files_part[stamp] = files_all[stamp].copy()
+                    if "type" not in files_part[stamp]:
+                        files_part[stamp]["type"] = "image"
+                    files_part[stamp]["detect"] = self.camera[which_cam].img_support.differs(file_info=files_part[stamp])
+                    files_part[stamp]["category"] = category + stamp
+                    files_part[stamp]["directory"] = "/" + self.config.db_handler.directory("images",
+                                                                                            "", False) + "/"
+                    count += 1
+
+                    if "lowres_size" in files_part[stamp]:
+                        if files_part[stamp]["lowres_size"][0] > content["max_image_size"]["lowres"][0]:
+                            content["max_image_size"]["lowres"][0] = files_part[stamp]["lowres_size"][0]
+                        if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["lowres"][1]:
+                            content["max_image_size"]["lowres"][1] = files_part[stamp]["lowres_size"][1]
+
+                    if "hires_size" in files_part[stamp]:
+                        if files_part[stamp]["hires_size"][0] > content["max_image_size"]["hires"][0]:
+                            content["max_image_size"]["hires"][0] = files_part[stamp]["hires_size"][0]
+                        if files_part[stamp]["lowres_size"][1] > content["max_image_size"]["hires"][1]:
+                            content["max_image_size"]["hires"][1] = files_all[stamp]["hires_size"][1]
+
+                    for key in ["detection_threshold", "hires_brightness", "weather", "info", "sensor"]:
+                        if key in files_part[stamp]:
+                            del files_part[stamp][key]
+
+                    if "detections" in files_part[stamp]:
+                        files_part[stamp]["detections"] = [
+                            {k: det[k] for k in ("label", "class") if k in det}
+                            for det in files_part[stamp]["detections"]
+                        ]
+
+                self.view_cache["today_complete_"+which_cam+"_"+hour+"_data"] = files_part
+
+            elif "today_complete_"+which_cam+"_"+hour+"_data" in self.view_cache:
+                files_part = self.view_cache["today_complete_"+which_cam+"_"+hour+"_data"]
 
             if len(files_part) > 0:
                 content["groups"][hour + ":00"] = []
@@ -2719,40 +3089,61 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
             dict: video view definition for API response
         """
         which_cam = param["which_cam"]
-        content = {"active_cam": which_cam, "view": "list_videos"}
+        content = {"active_cam": which_cam, "view": "list_videos", "entries": {}, "groups":{}}
 
-        files_delete = {}
         files_show = {}
-        content["entries"] = {}
-        content["groups"] = {}
+        files_delete = {}
+        files_favorite = {}
 
         if self.config.db_handler.exists("videos"):
             files_all = self.config.db_handler.read_cache(config="videos")
-            for file in files_all:
-                files_all[file]["directory"] = "http://" + birdhouse_env["server_audio"]  ### need for action
-                files_all[file]["directory"] += ":" + str(birdhouse_env["port_video"]) + "/"
-                files_all[file]["type"] = "video"
-                files_all[file]["path"] = self.config.directories["videos"]
-                files_all[file]["category"] = "/videos/" + file
-                if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1:
-                    files_delete[file] = files_all[file]
-                else:
-                    files_show[file] = files_all[file]
 
-            if len(files_show) > 0:
-                content["entries"] = files_show
-            if len(files_delete) > 0 and param["admin_allowed"]:
-                content["entries_delete"] = files_delete
+            if not "video_list_data_"+which_cam in self.view_cache:
+                use_view_cache = False
+                self.view_cache["video_list_data_"+which_cam] = files_all
+            elif self.view_cache["video_list_data_"+which_cam] != files_all:
+                use_view_cache = False
+                self.view_cache["video_list_data_"+which_cam] = files_all
+            else:
+                use_view_cache = True
+                content = self.view_cache["video_list_"+which_cam]
 
-        # videos
-        files_videos = content["entries"].copy()
-        if len(files_videos) > 0:
-            for entry_id in files_videos:
-                group = entry_id[0:4] + "-" + entry_id[4:6]
-                if group not in content["groups"]:
-                    content["groups"][group] = []
-                content["entries"][entry_id] = files_videos[entry_id].copy()
-                content["groups"][group].append(entry_id)
+            if not use_view_cache:
+                for file in files_all:
+                    files_all[file]["directory"] = "http://" + birdhouse_env["server_audio"]  ### need for action
+                    files_all[file]["directory"] += ":" + str(birdhouse_env["port_video"]) + "/"
+                    files_all[file]["type"] = "video"
+                    files_all[file]["path"] = self.config.directories["videos"]
+                    files_all[file]["category"] = "/videos/" + file
+                    if "to_be_deleted" in files_all[file] and int(files_all[file]["to_be_deleted"]) == 1:
+                        files_delete[file] = files_all[file]
+                    else:
+                        files_show[file] = files_all[file]
+                        if "favorit" in files_all[file] and int(files_all[file]["favorit"]) == 1:
+                            files_favorite[file] = files_all[file]
+
+                    for key in ["audio", "date_end", "stamp_start", "stamp_end", "image_count", "image_files",
+                                "elapsed", "frames", "percent", "fps", "audio_fps", "video_fps"]:
+                        if key in files_all[file]:
+                            del files_all[file][key]
+
+                if len(files_show) > 0:
+                    content["entries"] = files_show
+                if len(files_delete) > 0 and param["admin_allowed"]:
+                    content["entries_delete"] = files_delete
+                if len(files_favorite) > 0:
+                    content["entries_favorites"] = files_favorite
+
+                files_videos = content["entries"].copy()
+                if len(files_videos) > 0:
+                    for entry_id in files_videos:
+                        group = entry_id[0:4] + "-" + entry_id[4:6]
+                        if group not in content["groups"]:
+                            content["groups"][group] = []
+                        content["entries"][entry_id] = files_videos[entry_id].copy()
+                        content["groups"][group].append(entry_id)
+
+                self.view_cache["video_list_"+which_cam] = content
 
         content["view_count"] = ["all", "star", "detect", "recycle"]
         content["subtitle"] = presets.birdhouse_pages["videos"][0]
@@ -2793,11 +3184,12 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
                     video_server = "<!--CURRENT_SERVER-->"
                 files = {
                     "VIDEOFILE": "http://" + video_server + ":" + str(birdhouse_env["port_video"]) + "/",
-                    "THUMBNAIL": data["thumbnail"],
+                    "FILE_THUMBNAIL": data["thumbnail"],
                     "LENGTH": str(data["length"]),
                     "VIDEOID": video_id,
                     "ACTIVE": which_cam,
-                    "JAVASCRIPT": "createShortVideo();"
+                    "JAVASCRIPT_SHORTEN": "createShortVideo();",
+                    "JAVASCRIPT_THUMBNAIL": "createThumbVideo();"
                 }
 
         content["view_count"] = []
@@ -2805,3 +3197,17 @@ class BirdhouseViews(threading.Thread, BirdhouseClass):
         content["links"] = self.tools.print_links_json(link_list=("live", "favorit", "today", "videos", "backup"))
 
         return content
+
+    def diary_view(self, param):
+        self.logging.debug("Create data for diary view.")
+        which_cam = param["which_cam"]
+        content = {
+            "active_cam": which_cam,
+            "view": "diary",
+            "links": self.tools.print_links_json(link_list=("favorite", "videos", "today", "backup")),
+            "diary": self.diary.get_data()
+        }
+        content["diary"]["birds"] = self.config.birds
+
+        return content
+

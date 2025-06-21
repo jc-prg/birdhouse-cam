@@ -5,6 +5,8 @@ import json
 import signal
 import sys
 import traceback
+import secrets
+import string
 
 import socket
 import math
@@ -31,11 +33,11 @@ from modules.bh_class import BirdhouseClass
 from modules.bh_database import BirdhouseTEXT
 from modules.srv_support import ServerInformation, ServerHealthCheck
 from modules.statistics import BirdhouseStatistics
+import faulthandler
+faulthandler.enable()
 
-api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-api_start_tc = time.time()
-api_description = {"name": "BirdhouseCAM", "version": "v1.3.0"}
-app_framework = "v1.3.0"
+api_description = {"name": "BirdhouseCAM", "version": "v1.8.1"}
+app_framework = "v1.8.1"
 
 
 def on_exit(signum, handler):
@@ -194,6 +196,32 @@ def decode_url_string(string):
     return decoded_path
 
 
+def check_pwd(password):
+    """
+    check if password is correct and return a session ID, if correct
+
+    Args:
+        password: password from login dialog
+    Returns:
+        Any: True if password is correct
+    """
+    timeout = 5 * 60
+    if password == birdhouse_env["admin_password"]:
+        characters = string.ascii_letters + string.digits  # Letters and digits
+        session_id = ''.join(secrets.choice(characters) for _ in range(32))
+        birdhouse_sessions[session_id] = time.time()
+        srv_logging.info("Login successful: " + str(session_id))
+        return session_id
+
+    elif password in birdhouse_sessions and birdhouse_sessions[password] + timeout > time.time():
+        birdhouse_sessions[password] = time.time()
+        return password
+
+    else:
+        srv_logging.debug("Login failed: " + password)
+        return False
+
+
 class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     """
     configure server.HTTPServer
@@ -211,8 +239,10 @@ class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
     address_family = socket.AF_INET6
 
     def server_bind(self):
-        # Override server_bind to allow both IPv4 and IPv6 connections
-        # Bind to the wildcard address ("::") to enable dual-stack support
+        """
+        Override server_bind to allow both IPv4 and IPv6 connections
+        Bind to the wildcard address ("::") to enable dual-stack support
+        """
         self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         super().server_bind()
 
@@ -244,6 +274,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def stream_file(self, filetype, content, no_cache=False):
         """
         send file content (HTML, image, ...)
+
+        Args:
+            filetype (str): file type for http header
+            content (Any): content to calculate the content size
+            no_cache (bool): info if cache-control shall be set in the header
         """
         if len(content) > 0:
             self.send_response(200)
@@ -282,8 +317,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         """
         send header for video stream
         see https://stackoverflow.com/questions/13275409/playing-a-wav-file-on-ios-safari
-        """
 
+        Args:
+            size (Any): not used at the moment
+            content_type (str): content type of audio to be streamed, default is 'audio/x-wav'
+        """
         self.send_response(200)
 
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -310,6 +348,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
     def stream_video_frame(self, frame):
         """
         send header and frame inside a MJPEG video stream
+
+        Args:
+            frame (Any): video frame content to calculate its length
         """
         # try:
         self.wfile.write(b'--FRAME\r\n')
@@ -338,30 +379,31 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         admin_deny = birdhouse_env["admin_ip4_deny"]
         admin_allow = birdhouse_env["admin_ip4_allow"]
         admin_pwd = birdhouse_env["admin_password"]
+        current_ip = self.address_string().replace("::ffff:","")
 
         srv_logging.debug("Check if administration is allowed: " +
                           admin_type + " / " + self.address_string() + " / " +
                           "DENY=" + str(admin_deny) + "; ALLOW=" + str(admin_allow))
 
         if admin_type == "DENY":
-            if self.address_string() in admin_deny:
+            if current_ip in admin_deny:
                 return False
             else:
                 return True
         elif admin_type == "ALLOW":
-            if self.address_string() in admin_allow:
+            if current_ip in admin_allow:
                 return True
             else:
                 return False
         elif admin_type == "LOGIN":
-            # initial implementation, later with session ID
-            param = self.path_split(check_allowed=False)
-            srv_logging.debug("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
-                              str(param["session_id"] == admin_pwd))
-            if param["session_id"] == admin_pwd:
+            if current_ip in admin_allow:
                 return True
             else:
-                return False
+                # initial implementation, later with session ID
+                param = self.path_split(check_allowed=False)
+                srv_logging.debug("CHECK if " + param["session_id"] + " == " +  admin_pwd + " !!!!!!!! " +
+                                  str(param["session_id"] == admin_pwd))
+                return check_pwd(param["session_id"])
         else:
             return False
 
@@ -421,8 +463,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                             "last-answer", "favorit", "recycle", "update-views", "update-views-complete",
                             "archive-object-detection", "archive-remove-day", "archive-remove-list", "recreate-image-config",
                             "OBJECTS", "FAVORITES", "bird-names", "recycle-range", "WEATHER", "relay-on", "relay-off",
-                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "python-pkg",
-                            "STATISTICS", "reconnect-microphone"]
+                            "SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS", "CAMERA_SETTINGS", "SETTINGS_STATISTICS", "STATISTICS",
+                            "python-pkg", "reconnect-microphone", "edit-labels", "delete-labels",
+                            "DIARY", "diary-edit-milestone", "diary-delete-milestone", "diary-edit-brood", "diary-delete-brood",
+                            "delete-short-video", "delete-thumb-video"]
 
             param["session_id"] = elements[2]
             param["command"] = elements[3]
@@ -443,13 +487,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 last_is_cam = False
 
             elif param["command"] not in param_no_cam:
-                if param["which_cam"] not in views.camera:
+                if param["which_cam"] not in views.camera and param["which_cam"] != "INDEX":
                     srv_logging.warning("Unknown camera requested: " + param["which_cam"] + " (" + self.path + ")")
                     param["which_cam"] = "cam1"
                     last_is_cam = False
-
+                elif param["which_cam"] == "INDEX":
+                    srv_logging.debug("Invalid API request due to logout.")
+                    param["which_cam"] = "cam1"
+                    last_is_cam = False
             elif "command" in param and param["command"] in param_no_cam:
-                param["which_cam"] = "cam1"
+                param["which_cam"] = ""
                 last_is_cam = False
 
             count = 0
@@ -491,6 +538,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         return param
 
     def do_OPTIONS(self):
+        """
+        create http response if asked for OPTIONS
+        """
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Credentials', 'true')
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -554,6 +604,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = config.queue.set_status_recycle_range(param)
         elif param["command"] == "create-short-video":
             response = camera[which_cam].video.create_video_trimmed_queue(param)
+        elif param["command"] == "delete-short-video":
+            response = camera[which_cam].video.delete_shortened_video(param)
+        elif param["command"] == "create-thumb-video":
+            response = camera[which_cam].video.create_video_thumb_queue(param)
+        elif param["command"] == "delete-thumb-video":
+            response = camera[which_cam].video.delete_thumbnail(param)
         elif param["command"] == "recreate-image-config":
             response = backup.create_image_config_api(param)
         elif param["command"] == "create-day-video":
@@ -587,6 +643,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             response = backup.download_files(param)
         elif param["command"] == "archive-download-list":
             response = backup.download_files(param, body_data)
+        elif param["command"] == "diary-edit-brood":
+            if len(param["parameter"]) < 2:
+                param["parameter"].append("")
+            response = views.diary.edit_brood(param["parameter"][0], param["parameter"][1], body_data)
+        elif param["command"] == "diary-delete-brood":
+            response = views.diary.delete_brood(param["parameter"][0])
+        elif param["command"] == "diary-edit-milestone":
+            if len(param["parameter"]) < 2:
+                param["parameter"].append("")
+            response = views.diary.edit_milestone(param["parameter"][0], param["parameter"][1], body_data)
+        elif param["command"] == "diary-delete-milestone":
+            if len(param["parameter"]) < 2:
+                param["parameter"].append("")
+            response = views.diary.delete_milestone(param["parameter"][0], param["parameter"][1])
         elif param["command"] == "reconnect-camera":
             response = camera[which_cam].reconnect()
         elif param["command"] == "reconnect-microphone":
@@ -707,7 +777,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             srv_logging.info(str(data))
 
             config.main_config_edit("main", data, "", which_cam)
-
+        elif param["command"] == "edit-labels":
+            msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
+            srv_logging.info(msg)
+            srv_logging.info(str(param))
+            response = config.queue.entry_edit_object_labels("edit", param["parameter"][0], param["parameter"][1], param["parameter"][2])
         elif param["command"] == "set-temp-threshold":
             srv_logging.debug("Set temporary threshold to camera '"+which_cam+"': " + str(param["parameter"]))
             if which_cam in camera:
@@ -725,14 +799,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "kill-stream-id": stream_id
                 }
         elif param["command"] == "check-pwd":
-            admin_pwd = birdhouse_env["admin_password"]
-            if admin_pwd == param["parameter"][0]:
-                response["check-pwd"] = True
-            else:
+            check = check_pwd(param["parameter"][0])
+            if check == False:
                 response["check-pwd"] = False
+                response["session-id"] = ""
+            else:
+                response["check-pwd"] = True
+                response["return-page"] = param["parameter"][1]
+                response["session-id"] = check
         elif param["command"] == "reset-image-presets":
             response = camera[which_cam].reset_image_presets()
             srv_logging.info(str(param))
+        elif param["command"] == "create-max-resolution-image":
+            camera[which_cam].image_recording_max()
+            response = {"info": "create-max-resolution-image"}
         elif param["command"] == "--template-to-implement-new-POST-command--":
             msg = "API CALL '" + param["command"] + "' not implemented yet (" + str(self.path) + ")"
             srv_logging.info(msg)
@@ -750,7 +830,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         """
-        check path and send requested content
+        check path and send requested content, forwards to other functions depending on the requested content
         """
         global camera, sensor, config
 
@@ -848,22 +928,24 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         api_response["API"]["request_url"] = self.path
         api_response["API"]["request_param"] = param
         api_response["API"]["request_command"] = command
+        api_response["API"]["request_ip"] = self.address_string().replace("::ffff:","")
         api_commands = {
             "data"     : ["INDEX", "FAVORITES", "TODAY", "TODAY_COMPLETE", "ARCHIVE", "VIDEOS", "VIDEO_DETAIL",
                           "DEVICES", "OBJECTS", "STATISTICS", "bird-names", "WEATHER",
                           "SETTINGS", "CAMERA_SETTINGS", "IMAGE_SETTINGS", "DEVICE_SETTINGS",
-                          "status", "list"],
+                          "SETTINGS_CAMERAS", "SETTINGS_DEVICES", "SETTINGS_IMAGE", "SETTINGS_INFORMATION", "SETTINGS_STATISTICS",
+                          "status", "list","DIARY"],
             "info"     : ["camera-param", "version", "reload","python-pkg"],
-            "status"   : ["status", "list", "WEATHER"],
+            "status"   : ["status", "list", "WEATHER", "INDEX", "STATISTICS"],
             "status_small" : ["last-answer"],
-            "settings" : ["status", "list"],
+            "settings" : ["status", "list", "INDEX", "STATISTICS"],
             "weather"  : ["WEATHER"]
         }
         no_extra_command = ["WEATHER", "SETTINGS", "CAMERA_SETTINGS","IMAGE_SETTINGS","DEVICE_SETTINGS"]
         weather_status = {}
 
         # prepare data structure and set some initial values
-        if command in api_commands["status"] or command in api_commands["data"]:
+        if command in api_commands["status"]: # or command in api_commands["data"]:
             api_response["STATUS"] = {
                 "admin_allowed": self.admin_allowed(),
                 "api-call": status,
@@ -899,9 +981,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 "server_object_queues": {},
                 "system": {},
                 "video_recording": {},
+                "video_creation_day": {},
                 "object_detection": {
                     "active": birdhouse_status["object_detection"],
                     "processing": config.object_detection_processing,
+                    "processing_info": config.object_detection_info,
                     "progress": config.object_detection_progress,
                     "waiting": config.object_detection_waiting,
                     "waiting_dates": config.object_detection_waiting_keys,
@@ -914,12 +998,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     "active_cam": which_cam,
                     "active_date": "",
                     "active_page": command
-                }
+                },
+                "brood": views.diary.get_current_state()
             }
             # grab recording infos for defined cameras
             for cam_id in camera:
-                api_response["STATUS"]["video_recording"][cam_id] = {}
                 active = camera[cam_id].active
+                api_response["STATUS"]["video_recording"][cam_id] = {}
+                api_response["STATUS"]["video_creation_day"][cam_id] = {}
                 api_response["STATUS"]["server_object_queues"]["archive_"+cam_id] = len(camera[cam_id].object.detect_queue_archive)
                 if camera[cam_id].if_error():
                     active = False
@@ -936,6 +1022,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         "active":     active,
                         "processing": camera[cam_id].video.processing,
                         "recording":  camera[cam_id].video.recording,
+                        "error":      camera[cam_id].if_error(),
+                        "info":       {}
+                    }
+                if camera[cam_id].video.processing_day_video:
+                    api_response["STATUS"]["video_creation_day"][cam_id] = {
+                        "active":     active,
+                        "processing": camera[cam_id].video.processing_day_video,
+                        "error":      camera[cam_id].if_error(),
+                        "info":       camera[cam_id].video.record_info()
+                    }
+                else:
+                    api_response["STATUS"]["video_creation_day"][cam_id] = {
+                        "active":     active,
+                        "processing": camera[cam_id].video.processing_day_video,
                         "error":      camera[cam_id].if_error(),
                         "info":       {}
                     }
@@ -1000,12 +1100,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             if command == "TODAY" and len(param["parameter"]) > 0:
                 api_data["active"]["active_date"] = param["parameter"][0]
-                api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
+                #api_response["STATUS"]["view"]["active_date"] = param["parameter"][0]
 
         request_times["0_initial"] = round(time.time() - request_start, 4)
 
         if command == "INDEX":
             content = views.index_view(param=param)
+        elif command == "DIARY":
+            content = views.diary_view(param=param)
         elif command == "FAVORITES":
             content = views.favorite.list(param=param)
         elif command == "TODAY":
@@ -1017,6 +1119,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         elif command == "OBJECTS":
             content = views.object.list(param=param)
         elif command == "STATISTICS":
+            content = views.statistic_list(param=param)
+        elif command == "SETTINGS_STATISTICS":
             content = views.statistic_list(param=param)
         elif command == "VIDEOS":
             content = views.video_list(param=param)
@@ -1077,13 +1181,19 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         request_times["1_api-commands"] = round(time.time() - request_start, 4)
 
+        # add maintenance information
+        if "maintenance" in config.param:
+            api_response["API"]["maintenance"] = config.param["maintenance"]
+            if command in api_commands["settings"]:
+                api_response["SETTINGS"]["maintenance"] = config.param["maintenance"]
+
         # collect data for WEATHER section
         if command in api_commands["weather"]:
             if config.weather is not None:
                 api_response["WEATHER"] = config.weather.get_weather_info("all")
 
         # collect data for STATUS section
-        if command in api_commands["status"] or command in api_commands["data"]:
+        if command in api_commands["status"]: # or command in api_commands["data"]:
             weather_status = config.weather.get_weather_info("status")
             weather_current = config.weather.get_weather_info("current_extended")
 
@@ -1133,16 +1243,33 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             }
             api_response["SETTINGS"]["server"] = server_config
 
+            if self.admin_allowed():
+                api_response["SETTINGS"]["webdav"] = {
+                    "active": sys_info.webdav_available,
+                    "show": birdhouse_env["webdav_show"],
+                    "port": birdhouse_env["webdav_port"],
+                    "user": birdhouse_env["webdav_user"],
+                    "pwd": birdhouse_env["webdav_pwd"],
+                }
+            else:
+                api_response["SETTINGS"]["webdav"] = {
+                    "active": sys_info.webdav_available,
+                    "port": birdhouse_env["webdav_port"],
+                    "show": birdhouse_env["webdav_show"],
+                    "user": "",
+                    "pwd": "",
+                }
+
         # collect data for several lists views TODAY, ARCHIVE, TODAY_COMPLETE, ...
-        if command in api_commands["data"] or command in api_commands["status"]:
+        if command in api_commands["data"]:# or command in api_commands["status"]:
             param_to_publish = ["entries", "entries_delete", "entries_yesterday", "entries_favorites", "groups",
                                 "archive_exists", "info", "chart_data", "weather_data", "days_available",
-                                "day_back", "day_forward", "birds"]
+                                "day_back", "day_forward", "birds","diary"]
             for key in param_to_publish:
                 if key in content:
                     api_data["data"][key] = content[key]
 
-            param_to_publish = ["view", "view_count", "links", "subtitle", "max_image_size", "label"]
+            param_to_publish = ["view", "view_count", "links", "max_image_size", "label"]
             for key in param_to_publish:
                 if key in content:
                     api_data["view"][key] = content[key]
@@ -1160,8 +1287,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             request_times["5_config"] = round(time.time() - request_start, 4)
 
             # get device data
-            api_response["STATUS"]["devices"] = sys_info.get_device_status()
-            request_times["6_devices_status"] = round(time.time() - request_start, 4)
+            if command in api_commands["status"]:
+                api_response["STATUS"]["devices"] = sys_info.get_device_status()
+                request_times["6_devices_status"] = round(time.time() - request_start, 4)
 
             # get microphone data and create streaming information
             micro_data = config.param["devices"]["microphones"].copy()
@@ -1199,7 +1327,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     sensor_data[key]["values"] = sensor[key].get_values()
             request_times["9_status_sensor"] = round(time.time() - request_start, 4)
 
-            api_response["SETTINGS"]["devices"] = {
+            if command in api_commands["settings"]:
+                api_response["SETTINGS"]["devices"] = {
                 "cameras": camera_data,
                 "sensors": sensor_data,
                 "microphones": micro_data,
@@ -1344,12 +1473,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
         frame_id = frame_raw = frame_raw_pip = None
 
         self.stream_video_header()
+        config.camera_capture_active = False
         while stream_active:
 
             config.video_frame_count += 1
 
             if camera[which_cam].get_stream_kill(stream_id_ext, stream_id_int) or config.thread_ctrl["shutdown"]:
                 stream_active = False
+
+            while config.camera_capture_active:
+                time.sleep(0.1)
 
             if config.update["camera_" + which_cam]:
                 camera[which_cam].reconnect()
@@ -1376,7 +1509,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                     if stream_pip and which_cam2 != "" and which_cam2 in camera:
                         frame_raw_pip = camera[which_cam2].get_stream(stream_id=str(stream_id_int),
                                                                       stream_type=stream_type,
-                                                                      stream_resolution="hires",  # lowres
+                                                                      stream_resolution="hires",  # hires
                                                                       system_info=False,
                                                                       wait=False)
 
@@ -1560,18 +1693,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
         srv_logging.info("Stopped streaming from '"+which_cam+"'.")
 
-    def do_GET_files(self):
-        """
-        create API response
-        """
-        return
-
 
 on_exception_setting()
 sys.excepthook = on_exception
 
 
 if __name__ == "__main__":
+    api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    api_start_tc = time.time()
 
     # help
     if len(sys.argv) > 0 and "--help" in sys.argv:
@@ -1599,13 +1728,18 @@ if __name__ == "__main__":
         restart_thread.set_restart()
         exit()
 
-    set_server_logging(sys.argv)
+    elif len(sys.argv) > 0 and "--rpi" in sys.argv:
+        # when rpi wait a minute, as RPI have to connect to the internet first to get the correct time
+        time.sleep(60)
+        api_start = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        api_start_tc = time.time()
 
+    set_server_logging(sys.argv)
     srv_logging = set_logging('root')
     ch_logging = set_logging('cam-handl')
     view_logging = set_logging("view-head")
 
-    time.sleep(2)
+    time.sleep(1)
 
     if birdhouse_loglevel_default == logging.WARNING:
         srv_logging.warning('---------------------------------------------')

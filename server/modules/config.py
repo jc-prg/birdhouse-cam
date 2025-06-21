@@ -265,7 +265,11 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         Returns:
             str: path of database file
         """
-        return os.path.join(self.directory(config, date), self.files[config])
+        if config in self.files:
+            return os.path.join(self.directory(config, date), self.files[config])
+        else:
+            self.logging.warning("Could not find a path for '" + config + "/" + date + "'.")
+            return ""
 
     def directory(self, config, date="", include_main=True):
         """
@@ -352,7 +356,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         if db_type == "":
             db_type = self.db_type
         if self.couch is None and db_type != "json":
-            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            self.logging.debug("DB type '" + db_type + "' is currently not available, switch to 'json'.")
             db_type = "json"
 
         if db_type == "json":
@@ -401,7 +405,7 @@ class BirdhouseConfigDBHandler(threading.Thread, BirdhouseClass):
         if db_type == "":
             db_type = self.db_type
         if self.couch is None and db_type != "json":
-            self.logging.warning("DB type '" + db_type + "' is currently not available, switch to 'json'.")
+            self.logging.debug("DB type '" + db_type + "' is currently not available, switch to 'json'.")
             db_type = "json"
 
         if filename == "" and config != "":
@@ -965,7 +969,6 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
                             if "to_be_deleted" in entries[key]:
                                 del entries[key]["to_be_deleted"]
 
-
                 self.db_handler.unlock(config_file)
                 self.db_handler.write(config_file, "", entries)
                 self.config.set_processing_performance("config_queue_write", config_file, start_time)
@@ -1290,7 +1293,7 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
 
     def set_status_recycle_object(self, param, which_cam):
         """
-        Set / unset recycling based on given threshold
+        identify RECYCLE images based on detected objects
 
         Args:
             param (dict): parameters given via API
@@ -1564,6 +1567,69 @@ class BirdhouseConfigQueue(threading.Thread, BirdhouseClass):
         self.logging.debug("Request to edit data (" + config + "/" + date + "/" + key + ").")
         self.add_to_edit_queue(config, date, key, entry, "edit")
 
+    def entry_edit_object_labels(self, command, date, key, data=""):
+        """
+        edit or delete labels for image entry (today or archive)
+
+        Args:
+            command (str): use "edit" (no further commands implemented yet)
+            date (str): date of archived day, empty for today
+            key (str): time key of image entry
+            data (Any): data in the format "0::object1,1::object2,2::object3"
+
+        Returns:
+            dict: API response
+        """
+        entry = {}
+        response = {}
+        self.logging.info("Edit detection labels for '" + date + "_" + key + "': " + data)
+
+        if date == "TODAY":
+            date = ""
+        entries = self.db_handler.read_cache("images", date)
+        if date != "" and key in entries["files"]:
+            self.logging.debug("Archive - FOUND ("+key+")")
+            entry = entries["files"][key]
+        elif key in entries:
+            self.logging.debug("Today - FOUND ("+key+")")
+            entry = entries[key]
+        else:
+            error_msg = "Edit labels - entry NOT FOUND ("+date+"_"+key+")"
+            self.logging.warning()
+            self.logging.debug(str(entries))
+            response = {"result": "ERROR: " + error_msg}
+            return response
+
+        label_object_list = []
+        data_list = data.split(",")
+        for item in data_list:
+            if not "::" in item:
+                continue
+            number, value = item.split("::")
+            number = int(number)
+            if number >= len(entry["detections"]):
+                continue
+            label_object = entry["detections"][number]
+            if value != "DELETE":
+                if value != label_object["label"]:
+                    if not "label_org" in label_object:
+                        label_object["label_org"] = label_object["label"]
+                    label_object["label"] = value
+                    label_object["confidence_org"] = label_object["confidence"]
+                    label_object["confidence"] = 1.0
+                label_object_list.append(label_object)
+        entry["detections"] = label_object_list
+
+        self.logging.debug("---> entry_edit_object_labels: " + str(entry))
+
+        if date == "":
+            self.add_to_edit_queue("images", date, key, entry, "edit")
+        else:
+            self.add_to_edit_queue("backup", date, key, entry, "edit")
+
+        response = {"result": "OK"}
+        return response
+
     def entry_delete(self, config, date, key):
         """
         delete entry from config file using the queue
@@ -1646,12 +1712,15 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.user_activity_last = 0
         self.record_audio_info = {}
         self.camera_scan = {}
+        self.camera_capture_active = False
 
         self.processing_information = {}
         self.processing_performance = {}
 
         self.object_detection_processing = None
         self.object_detection_progress = None
+        self.object_detection_info = {}
+
         self.object_detection_waiting = None
         self.object_detection_waiting_keys = None
         self.object_detection_build_views = False
@@ -1659,6 +1728,7 @@ class BirdhouseConfig(threading.Thread, BirdhouseClass):
         self.last_start = ""
         self.measure_time = 30
         self.measure_last = time.time()
+        self.last_wrote_statistics = 0
 
         # read or create main config file
         self.db_handler = BirdhouseConfigDBHandler(self, "json", main_directory)

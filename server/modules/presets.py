@@ -37,6 +37,7 @@ def set_global_configuration():
         "admin_ip4_allow": "ADMIN_IP4_ALLOW",
         "admin_password": "ADMIN_PASSWORD",
         "admin_login": "ADMIN_LOGIN",
+        "av_sync": "AV_SYNC_ANALYSIS",
         "couchdb_server": "COUCHDB_SERVER",
         "couchdb_user": "COUCHDB_USER",
         "couchdb_password": "COUCHDB_PASSWORD",
@@ -69,6 +70,10 @@ def set_global_configuration():
         "which_instance": "BIRDHOUSE_INSTANCE",
         "statistics_threads": "STATISTICS_THREADS",
         "statistics_error": "STATISTICS_ERROR",
+        "webdav_show": "WEBDAV_ACTIVE",
+        "webdav_port": "WEBDAV_PORT",
+        "webdav_user": "WEBDAV_USER",
+        "webdav_pwd": "WEBDAV_PWD",
     }
 
     birdhouse_env = {}
@@ -76,10 +81,10 @@ def set_global_configuration():
         birdhouse_env[key] = get_env(birdhouse_env_keys[key])
         if birdhouse_env[key] is None:
             print('Value in .env not found: ' + str(birdhouse_env_keys[key]))
-
+    #"av_sync_analysis",
     for key in ["database_cleanup", "rpi_active", "rpi_64bit", "detection_active", "log_to_file",
-                "test_video_devices", "database_cache", "database_cache_archive",
-                "statistics_threads","statistics_error"]:
+                "test_video_devices", "database_cache", "database_cache_archive", "av_sync",
+                "statistics_threads","statistics_error", "webdav_show"]:
         if birdhouse_env[key] is not None:
             birdhouse_env[key] = str(birdhouse_env[key]).lower() in ("true", "1", "yes", "on")
 
@@ -367,6 +372,7 @@ camera_list = []
 birdhouse_env = {}
 birdhouse_status = {"object_detection": False, "object_detection_details": ""}
 birdhouse_picamera = False
+birdhouse_sessions = {}
 
 set_global_configuration()
 
@@ -391,21 +397,25 @@ if birdhouse_env["installation_type"].upper() != "DOCKER":
     birdhouse_couchdb["db_basedir"] = birdhouse_env["dir_project"] + "data/"
 
 birdhouse_pages = {
-    "live": ("Live-Stream", "/index.html", "INDEX"),
-    "backup": ("Archiv", "/list_backup.html", "ARCHIVE"),
-    "today": ("Heute", "/list_short.html", "TODAY"),
-    "today_complete": ("Alle heute", "/list_new.html", "TODAY_COMPLETE"),
-    "favorit": ("Favoriten", "/list_star.html", "FAVORITES"),
-    "cam_info": ("Einstellungen", "/cameras.html", "SETTINGS"),
-    "video_info": ("Video Info", "/video-info.html", ""),
-    "videos": ("Videos", "/videos.html", "VIDEOS"),
-    "object": ("Birds", "/birds.html", "BIRDS"),
-    "statistics": ("Statistics", "/statistic.html", "STATISTICS"),
-    "save": ("Speichern", "/image.jpg", "")
+    "backup":           ["ARCHIVE"],
+    "cam_info":         ["SETTINGS"],
+    "diary":            ["DIARY"],
+    "favorit":          ["FAVORITES"],
+    "favorite":         ["FAVORITES"],
+    "live":             ["INDEX"],
+    "today":            ["TODAY"],
+    "today_complete":   ["TODAY_COMPLETE"],
+    "video_info":       ["VIDEO_INFO"],
+    "videos":           ["VIDEOS"],
+    "object":           ["BIRDS"],
+    "settings":         ["SETTINGS"],
+    "statistics":       ["SETTINGS_STATISTICS"],
+    "save":             ["SAVE"]
 }
 birdhouse_databases = {
     "config": {},
     "favorites": {},
+    "diary": {},
     "today_images": {},
     "today_weather": {},
     "today_sensors": {},
@@ -427,6 +437,7 @@ birdhouse_directories = {
     "favorites": "images/",
     "sensor": "images/",
     "statistics": "other/",
+    "diary": "other/",
     "statistics_archive": "images/",
     "today": "00_today/",
     "objects": "images/",
@@ -441,6 +452,7 @@ birdhouse_files = {
     "birds": "birds.json",
     "backup": "config_images.json",
     "backup_info": "config_backup.json",
+    "diary": "config_diary.json",
     "favorites": "config_favorites.json",
     "objects": "config_objects.json",
     "images": "config_images.json",
@@ -454,6 +466,7 @@ birdhouse_dir_to_database = {
     birdhouse_directories["main"] + "config":                           "config",
     birdhouse_directories["main"] + "birds":                            "birds",
     birdhouse_directories["favorites"] + "config_favorites":            "favorites",
+    birdhouse_directories["diary"] + "config_diary":                    "diary",
     birdhouse_directories["objects"] + "config_objects":                "objects",
     birdhouse_directories["sensor"] + "config_sensor":                  "today_sensors",
     birdhouse_directories["statistics"] + "config_statistics":          "today_statistics",
@@ -594,7 +607,7 @@ birdhouse_default_micro = {
     "device_id": 0,
     "device_name": "none",
     "sample_rate": 16000,
-    "chunk_size": 1,
+    "chunk_size": 8,
     "record_audio_delay": 1.5,
     "channels": 1,
     "codec": "wav",
@@ -646,6 +659,10 @@ birdhouse_preset = {
         "language": "EN",
         "timezone": "UTC+1",
         "weather_active": True
+    },
+    "maintenance": {
+        "closed": False,
+        "message": ""
     },
     "server": {  # set vars in the .env file
         "ip4_admin_deny": [""],

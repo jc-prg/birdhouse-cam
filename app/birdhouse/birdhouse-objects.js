@@ -10,11 +10,12 @@
 * @param (string) title: title of this view
 * @param (dict) data: data returned form server API for this view
 */
-function birdhouse_OBJECTS(title, data) {
+function birdhouse_OBJECTS( data ) {
 
-    var html = "";
-    var detections     = data["DATA"]["data"]["entries"];
-	var server_status  = app_data["STATUS"]["server"];
+    var html            = "";
+    var title           = lang("BIRDS_DETECTED");
+    var detections      = data["DATA"]["data"]["entries"];
+	var server_status   = app_data["STATUS"]["server"];
 
     if (!detections && server_status["view_archive_loading"] != "done") {
         var progress_info = "<i><div id='loading_status_object'></div></i>";
@@ -56,7 +57,8 @@ function birdhouse_OBJECTS(title, data) {
         var entry_information = "";
 
         if (value["detections"]["favorite"] > 0 ) {
-            var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active_cam+"\", \"all-dates\", \""+key+"\");";
+            //var onclick = "birdhousePrint_load(\"FAVORITES\",\""+app_active.cam+"\", \"all-dates\", \""+key+"\");";
+            var onclick = "birdhousePrint_page(page=\"FAVORITES\",cam=\""+app_active.cam+"\", date=\"all-dates\", label=\""+key+"\");";
             favorite_label += "<div class='other_label' onclick='"+onclick+"'>&nbsp;&nbsp;" + lang("FAVORITES") + "&nbsp;(" + value["detections"]["favorite"] + ")&nbsp;&nbsp;</div>";
             }
         else  { value["detections"]["favorite"] = 0; }
@@ -67,7 +69,8 @@ function birdhouse_OBJECTS(title, data) {
             for (var k=0;k<date_list.length;k++) {
                 var stamp      = date_list[k];
                 var date       = stamp.substring(6,8) + "." + stamp.substring(4,6) + "." + stamp.substring(2,4);
-                var onclick    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
+                //var onclick    = "birdhousePrint_load(view=\"TODAY\", camera=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
+                var onclick    = "birdhousePrint_page(page=\"TODAY\", cam=\""+camera+"\", date=\""+stamp+"\", label=\""+key+"\");";
                 default_dates += "<div class='other_label' onclick='"+onclick+"'>&nbsp;" + camera + ": " + date + "&nbsp;</div>";
                 day_count += 1;
 
@@ -88,7 +91,9 @@ function birdhouse_OBJECTS(title, data) {
         entry_information += favorite_label + default_dates;
 
         var html_entry = tab.start();
-        html_entry    += tab.row(birdhouse_Image(bird_lang(key), key, value), entry_information);
+        var image      = "<div class='detection_title_image'>" + birdhouse_Image(bird_lang(key), key, value) + "</div>";
+        image          = image.replace("<img", "<img style='max-height:200px;width:auto;'")
+        html_entry    += tab.row(image, entry_information);
         html_entry    += tab.end();
 
         var bird_key = bird_lang(key);
@@ -99,7 +104,7 @@ function birdhouse_OBJECTS(title, data) {
         }
 
 	birdhouse_frameHeader(title);
-	setTextById(app_frame_content, html);
+	setTextById(app_frame.content, html);
     }
 
 /*
@@ -176,6 +181,115 @@ function bird_lang(bird_class) {
         else                                { return bird_class; }
     }
 }
+
+/*
+* create dialog to edit or delete labels from object detections
+*
+* @param (string) date: date of archived day, empty if today
+* @param (string) time: timestamp of selected image
+* @param (string) camera: camera of selected image
+* @param (string) label: label (optional)
+*/
+function birdhouse_labels_edit(date, time, camera, label="") {
+
+    var api_request = [];
+    var message     = "<b>"+lang("EDIT_OBJECT_LABELS")+"</b><hr/>";
+    var cmd         = "birdhouse_label_edit_request();";
+
+    if (time.indexOf("_") > 0) {
+        date_time = time.split("_");
+        date = date_time[0];
+        time = date_time[1];
+        }
+
+    if (date == "") { api_request = ["TODAY", camera]; date = "TODAY";  }
+    else            { api_request = ["TODAY", date, camera]; if (time.indexOf("_") > 0) { time = time.split("_")[1]; } }
+
+    message += "<i>" + date + " | " + time + " | " + camera  + "</i>";
+    message += "<hr/>";
+    message += "<div id='edit_label_dialog' style='width:100%'>&nbsp;<br/>"+lang("PLEASE_WAIT")+"<br/>&nbsp;<br/></div>";
+    message += "<div id='edit_label_date' style='display:none'>"+date+"</div>";
+    message += "<div id='edit_label_time' style='display:none'>"+time+"</div>";
+    //message += JSON.stringify(app_data);
+
+    console.log("labels edit - get data: " + JSON.stringify(api_request))
+    birdhouse_apiRequest("GET", api_request, "", birdhouse_labels_edit_load, "", "birdhouse_label_edit");
+
+    appMsg.dialog(msg=message, cmd=cmd, height=80, width=85);
+}
+
+/*
+* create list of labels for the selected image and embed the list into the edit dialog
+*
+* @param (object) data: date of archived day, empty if today
+*/
+function birdhouse_labels_edit_load(data) {
+
+    var message     = "";
+    var id          = getTextById("edit_label_time");
+    var entry       = data["DATA"]["data"]["entries"][id];
+    var detections  = entry["detections"];
+    var imageURL    = entry["directory"] + entry["hires"];
+    imageURL        = imageURL.replaceAll("//", "/");
+    var count       = 0;
+    var img_ids     = "";
+
+    message += "&nbsp;<br/>";
+    message += "<table class='labels_edit_table'>";
+    message += "<tr style='font-weight:bold;'><td width='15px'>#</td><td width='55px'>" + lang("IMAGE") + "</td><td>" + lang("CURRENT_LABEL") + "</td><td>" + lang("EDIT_LABEL") + "</td></tr>";
+
+    for (var i=0;i<detections.length;i++) {
+        var object      = detections[i];
+        var label       = object["label"];
+        var label_org   = "";
+        var coordinates = object["coordinates"];
+        var image       = birdhouse_ImageCropped("labels_edit_img_"+count, imageURL, coordinates, "max-height:80px;max-width:80px;border:1px solid black;");
+        img_ids        += "labels_edit_img_"+count+",";
+
+        var select      = "<select id='labels_edit_img_"+count+"'>";
+        select         += "<option value='" + label + "'>" + label + "</option>";
+        if (object["label_org"] != undefined) {
+            label_org   = "<br/><i>(org: " + object["label_org"] + ")</i>";
+            select     += "<option value='"+object["label_org"]+"'>org: " + object["label_org"] + "</option>";
+            }
+        Object.keys(app_bird_names).forEach(key => {
+            select     += "<option value='" + key.toLowerCase() + "'>" + bird_lang(key) + "</option>";
+            });
+        select         += "<option style='color: red; font-weight: bold;' value='DELETE'>"+lang("DELETE").toUpperCase().replace("&OUML","&Ouml")+"!</option>";
+        select         += "</select>";
+
+        message        += "<tr><td width='10px'>" + count + "</td><td width='50px'>" + image + "</td><td>" + label + label_org + "</td><td>"+select+"</td></tr>";
+        count          += 1;
+        }
+    message += "</table>";
+    message += "<br/>&nbsp;<br/>";
+    message += "<div id='edit_label_id_list' style='display:none;'>" + img_ids + "</div>";
+
+    setTextById("edit_label_dialog", message);
+}
+
+/*
+* send request to save edited label information
+*/
+function birdhouse_label_edit_request() {
+    var entry_id   = getTextById('edit_label_time');
+    var entry_date = getTextById('edit_label_date');
+    var label_ids  = getTextById('edit_label_id_list').split(",");
+    var label_data = "";
+
+    for (var i=0;i<label_ids.length-1;i++) {
+        var value = getValueById(label_ids[i]);
+        label_data += i + "::" + value + ",";
+        }
+
+    //var message = entry_date + ":" + entry_id+" - " + label_data + "<br/>" + JSON.stringify(label_ids);
+    //appMsg.alert(message);
+
+    var api_request = ["edit-labels", entry_date, entry_id, label_data];
+    birdhouse_apiRequest("POST", api_request, "", birdhouse_AnswerOther, "", "birdhouse_label_edit_request");
+
+    setTimeout(function(){ birdhouseReloadView(); }, 6000);
+    }
 
 
 app_scripts_loaded += 1;

@@ -1,8 +1,6 @@
-/*-----------------------------------------*/
-/* jc://remote/slider/                     */
-/*-----------------------------------------*/
-
-/* display information within the remote control */
+/*
+* define style for slider (admin view, from jc-prg/remote)
+*/
 
 
 .bh-slider-button {
@@ -142,12 +140,12 @@ input[type="range"].bh-slider.undef::-webkit-slider-runnable-track  { background
 input[type="range"].bh-slider.undef::-webkit-slider-thumb           { background : gray;  border : 2px solid #cccccc; }
 input[type="range"].bh-slider.undef::-moz-range-thumb               { background : gray;  border : 2px solid #cccccc; }
 
-input[type="range"].bh-slider.set::-webkit-slider-runnable-track   { background: #332222; }
-input[type="range"].bh-slider.set::-webkit-slider-thumb            { background : #1874EE;  border : 2px solid #1E90FF; }
-input[type="range"].bh-slider.set::-moz-range-thumb                { background : #1874EE;  border : 2px solid #1E90FF; }
+input[type="range"].bh-slider.set::-webkit-slider-runnable-track    { background: #332222; }
+input[type="range"].bh-slider.set::-webkit-slider-thumb             { background : #1874EE;  border : 2px solid #1E90FF; }
+input[type="range"].bh-slider.set::-moz-range-thumb                 { background : #1874EE;  border : 2px solid #1E90FF; }
 
-input[type="range"].bh-slider.start::-webkit-slider-runnable-track   { background: #332222; }
-input[type="range"].bh-slider.start::-webkit-slider-thumb            { background : #4444BB;  border : 2px solid #7777EE; }
-input[type="range"].bh-slider.start::-moz-range-thumb                { background : #4444BB;  border : 2px solid #7777EE; }
+input[type="range"].bh-slider.start::-webkit-slider-runnable-track  { background: #332222; }
+input[type="range"].bh-slider.start::-webkit-slider-thumb           { background : #4444BB;  border : 2px solid #7777EE; }
+input[type="range"].bh-slider.start::-moz-range-thumb               { background : #4444BB;  border : 2px solid #7777EE; }
 
 /* EOF */

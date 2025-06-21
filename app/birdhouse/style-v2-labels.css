@@ -1,0 +1,142 @@
+/*
+* define style for object detection labels
+*/
+
+:root {
+    --label-download: darkred;
+    --label-download-text: darkred;
+    --label-download-glow: #333;
+    --label-download-hover: #700;
+
+    --label-detection: #bbbbff;
+    --label-detection-text: black;
+    --label-detection-glow: #333;
+    --label-detection-hover: #700;
+
+    --label-detection-function: #9999FF;
+    --label-detection-function-text: black;
+    --label-detection-function-glow: #333;
+    --label-detection-function-hover: #700;
+
+    --label-other: #bbffbb;
+    --label-other-text: black;
+    --label-other-glow: #333;
+    --label-other-hover: #700;
+ }
+
+.download_label {
+    background      : var(--label-download);
+    color           : var(--label-download-text);
+    width           : 20px;
+    border-radius   : 7px;
+
+    position        : relative;
+    top             : -16px;
+    right           : -12px;
+
+    z-index         : 100;
+    padding         : 3px;
+    padding-right   : 6px;
+    padding-left    : 6px;
+    font-size       : 8px;
+    min-width       : 14px;
+    text-align      : center;
+}
+
+.detection_label {
+    background    : var(--label-detection);
+    color         : var(--label-detection-text);
+
+    float         : left;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+}
+
+.detection_label.image {
+    float       : none;
+    cursor      : default;
+    max-height  : unset;
+    height      : unset;
+    width       : 100px;
+}
+
+.detection_label.glow {
+    box-shadow: 0px 0px 3px 3px var(--label-detection-glow);
+    /* in order: x offset, y offset, blur size, spread size, color */
+    /* blur size and spread size are optional (they default to 0) */
+}
+
+.detection_label:hover {
+      box-shadow: 0px 0px 2px 2px  var(--label-detection-hover);
+      /* in order: x offset, y offset, blur size, spread size, color */
+      /* blur size and spread size are optional (they default to 0) */
+}
+
+.detection_label_function {
+    background    : var(--label-detection-function);
+    color         : var(--label-detection-function-text);
+
+    float         : left;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+}
+
+.detection_label_function.glow {
+  box-shadow: 0px 0px 3px 3px  var(--label-detection-function-glow);
+  /* in order: x offset, y offset, blur size, spread size, color */
+  /* blur size and spread size are optional (they default to 0) */
+}
+
+.detection_label_function:hover {
+      box-shadow: 0px 0px 2px 2px  var(--label-detection-function-hover);
+      /* in order: x offset, y offset, blur size, spread size, color */
+      /* blur size and spread size are optional (they default to 0) */
+}
+
+.other_label {
+    background    : var(--label-other);
+    color         : var(--label-other-text);
+
+    float         : left;
+    border-radius :  8px;
+    height        : 12px;
+    max-height    : 12px;
+    margin        :  5px;
+    padding       :  4px;
+    cursor        : pointer;
+    font-size     : 11px;
+}
+
+.other_label.glow {
+  box-shadow: 0px 0px 2px 2px var(--label-other-glow);
+  /* in order: x offset, y offset, blur size, spread size, color */
+  /* blur size and spread size are optional (they default to 0) */
+}
+
+.other_label:hover {
+  box-shadow: 0px 0px 2px 2px var(--label-other-hover);
+  /* in order: x offset, y offset, blur size, spread size, color */
+  /* blur size and spread size are optional (they default to 0) */
+}
+
+.labels_edit_table {
+    min-width       : 80%;
+    border-collapse : collapse;
+    border          : 1px solid gray;
+    }
+
+.labels_edit_table th, .labels_edit_table td {
+    padding         : 5px;
+    }
+
+

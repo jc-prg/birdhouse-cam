@@ -103,6 +103,8 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
             self.config.queue.entry_add(config="statistics", date="", key=save_stamp,
                                         entry=save_statistic.copy())
 
+        self.config.last_wrote_statistics = time.time()
+
     def register(self, key, description):
         """
         Register keys incl. description for statistics
@@ -113,17 +115,34 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         """
         self._statistics_info[key] = description
 
-    def set(self, key, value):
+    def set(self, key, value, value_type="average"):
         """
-        Set key and value to be saved in next iteration
+        Set key and value to be saved in next iteration. There are three modes, depending on the value_type set:
+        'average' (default) will add the value to an array. When writing the statistics, the average value will be
+        calculated. 'max' will replace the last value, if the current value is higher. 'min' will replace it, if
+        the current value is lower.
 
         Args:
             key (str): statistic key
             value (Any): statistic value
+            value_type (str): set to 'average', 'min' or 'max', default is 'average'
         """
         if key not in self._statistics_array:
             self._statistics_array[key] = []
-        self._statistics_array[key].append(value)
+        if value_type == "average":
+            self._statistics_array[key].append(value)
+        elif value_type == "max":
+            if len(self._statistics_array[key]) == 0:
+                self._statistics_array[key] = [value]
+            elif value > self._statistics_array[key][0]:
+                self._statistics_array[key] = [value]
+        elif value_type == "min":
+            if len(self._statistics_array[key]) == 0:
+                self._statistics_array[key] = [value]
+            elif value < self._statistics_array[key][0]:
+                self._statistics_array[key] = [value]
+        else:
+            self.logging.warning("Could not set statistic value, value type not supported: " + value_type)
 
     def get_chart_data(self, categories, date="", values=False):
         """
@@ -144,7 +163,7 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
             return {}
         chart_data = self.config.db_handler.read(db_name, date, db_type="both")
         chart_value = {}
-        chart_values = {"data": {}, "info": {}}
+        chart_values = {"titles": {}, "data": {}, "info": {}}
 
         values = True
         # reformat values if requested
@@ -205,14 +224,38 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
                                 values.append(key)
                     chart[category]["data"][stamp] = values
 
+                # calculate total view time and max streams
                 if category == "streams":
                     chart[category]["info"] = {"max": 0, "views": 0}
+                    count = 0
+                    index_max = []
+                    index_avg = []
+                    for title in chart[category]["titles"]:
+                        if title.startswith("Max"):
+                            index_max.append(count)
+                        else:
+                            index_avg.append(count)
+                        count += 1
+                    self.logging.debug("---------> avg | " + str(index_avg))
+                    self.logging.debug("---------> max | " + str(index_max))
+
                     for stamp in chart[category]["data"]:
-                        for value in chart[category]["data"][stamp]:
-                            if "int" in str(type(value)):
-                                if value > chart[category]["info"]["max"]:
-                                    chart[category]["info"]["max"] = value
-                                chart[category]["info"]["views"] += value
+                        self.logging.debug("---------> " + stamp + " | " + str(chart[category]["data"][stamp]) + " | " + str(type(chart[category]["data"][stamp])))
+
+                        for position in index_avg:
+                            if position < len(chart[category]["data"][stamp]):
+                                value = chart[category]["data"][stamp][position]
+                                if isinstance(value, int) or isinstance(value, float):
+                                    chart[category]["info"]["views"] += round(value * (self._write_interval / 60), 1)
+
+                        count_streams = 0
+                        for position in index_max:
+                            if position < len(chart[category]["data"][stamp]):
+                                value = chart[category]["data"][stamp][position]
+                                if isinstance(value, int) or isinstance(value, float):
+                                    count_streams += value
+                        if count_streams > chart[category]["info"]["max"]:
+                            chart[category]["info"]["max"] = count_streams
 
         return chart
 
@@ -238,9 +281,20 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
         }
         if chart["3days"] == {}:
 
+            total_views = 0
+            max_streams = 0
+
             for key in days_3:
                 short_date = key[6:8]+"."+key[4:6]+"."
                 day_data = self.get_chart_data([], key)
+
+                if "streams" in day_data and "info" in day_data["streams"]:
+                    total_views += day_data["streams"]["info"]["views"]
+                    if max_streams < day_data["streams"]["info"]["max"]:
+                        max_streams = day_data["streams"]["info"]["max"]
+                    self.logging.debug("---> stream statistics: " + str(total_views) + " / " + str(max_streams) + " / " + key)
+                else:
+                    self.logging.debug("---> stream statistics: no stream info available / " + key)
 
                 for category in day_data:
                     if category not in chart["3days"]:
@@ -250,6 +304,11 @@ class BirdhouseStatistics(threading.Thread, BirdhouseClass):
 
                     for stamp in day_data[category]["data"]:
                         chart["3days"][category]["data"][short_date + " " + stamp] = day_data[category]["data"][stamp]
+
+            if "3days" in chart:
+                if "streams" not in chart["3days"]:
+                    chart["3days"]["streams"] = {}
+                chart["3days"]["streams"]["info"] = {"views": total_views, "max": max_streams}
 
             self._statistics_3days = chart["3days"]
 
