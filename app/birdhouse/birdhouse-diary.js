@@ -4,7 +4,7 @@
 // function to manage the birdhouse diary
 //--------------------------------------
 
-    const sample_dataset = {
+const sample_dataset = {
       "info": {},
       "broods": {
         "2025-05": {
@@ -37,7 +37,7 @@
         },
         "20250521": {
           "6 Eier": { "brood": "2025-1", "type": "2", "stage": "Eier legen", "comment": "...", "value": "6"  },
-          "Brüten startet": { "brood": "2025-1", "type": "3", "stage": "Eier legen", "comment": "...", "value": "start" },
+          "Brut startet": { "brood": "2025-1", "type": "3", "stage": "Eier legen", "comment": "...", "value": "start" },
           "Specht": { "brood": "2025-1", "type": "7", "stage": "", "comment": "Specht inspiziert Vogelhaus" }
         },
         "20250522": {
@@ -46,25 +46,25 @@
       }
     };
 
-var diary_data          = {};
-var stage_definition    = {};
-var stage_legend        = "";
-var stage_values        = {};
-var brood_list          = {};
-var bird_definition     = {};
-var archive_keys        = [];
-var video_keys          = [];
-var dataset             = sample_dataset["diary"];
-var calendarContainer   = undefined;
-var currentOffset       = 0;
-var btn_previous        = "<button onclick=\"diary_changeMonth(-1)\" style=\"float:left\">&nbsp;&nbsp;◀</button>";
-var btn_next            = "<button onclick=\"diary_changeMonth(1)\" style=\"float:right\">▶</button>";
-var image_archive       = "";
-var image_video         = "";
-var image_add           = "";
-var image_edit          = "";
-var image_delete        = "";
-var last_stage_value    = "";
+let diary_data          = {};
+let stage_definition    = {};
+let stage_legend        = "";
+let stage_values        = {};
+let brood_list          = {};
+let bird_definition     = {};
+let archive_keys        = [];
+let video_keys          = [];
+let dataset             = sample_dataset["diary"];
+let calendarContainer   = undefined;
+let currentOffset       = 0;
+let btn_previous        = "<button onclick=\"diary_changeMonth(-1)\" style=\"float:left\">&nbsp;&nbsp;◀</button>";
+let btn_next            = "<button onclick=\"diary_changeMonth(1)\" style=\"float:right\">▶</button>";
+let image_archive       = "";
+let image_video         = "";
+let image_add           = "";
+let image_edit          = "";
+let image_delete        = "";
+let last_stage_value    = "";
 
 
 /*
@@ -75,9 +75,9 @@ var last_stage_value    = "";
 function birdhouse_DIARY(data) {
     diary_setVariables(data);
 
-    var settings    = "";
-    var html        = "";
-    var calendar    = "";
+    let settings    = "";
+    let html        = "";
+    let calendar    = "";
     calendar       += "<div id='calendarContainer' class='calendar-container'></div>";
     calendar       += "<div id='calendarLegend' class='calendar-legend'>"+stage_legend+"</div>";
 
@@ -104,7 +104,7 @@ function birdhouse_DIARY(data) {
 */
 function diary_setVariables(data="") {
 
-    if (data != "") {
+    if (data !== "") {
         currentOffset   = 0;
         diary_data      = data["DATA"]["data"]["diary"];
         dataset         = diary_data["entries"];
@@ -176,25 +176,25 @@ function diary_setVariables(data="") {
 * @param (object) entry: data of the milestone
 */
 function diary_showDetails(date, title, entry) {
-    var tab  = new birdhouse_table();
-    var commands = {
+    let tab  = new birdhouse_table();
+    let commands = {
         "EDIT":   [lang("EDIT"), "diary_editDetails('"+date+"', '"+title+"', 'diary_entry');"],
         "DELETE": [lang("DELETE"), "diary_deleteEntryConfirm('"+date+"', '"+title+"');"],
         "CLOSE":  [lang("CLOSE"), ""]
         };
 
-    var html = "";
+    let html = "";
     html    += "<div style='float:left;width:100%;'><h2><div class='milestone type-"+entry["type"]+" filled' style='vertical-align:center;'></div>";
     html    += "<center>&nbsp;&nbsp;"+title+"</center></h2></div><div style='float:left;width:100%;'><hr/><br/></div>";
     html    += tab.start();
     html    += tab.row(lang("DATE")+":",    date + "<input id='add_key' value='"+date+"' style='display:none;'>");
     html    += tab.row(lang("TYPE")+":",    stage_definition[entry["type"]]);
-    if (stage_values[entry["value"]] != undefined) {
+    if (stage_values[entry["value"]] !== undefined) {
         html    += tab.row(lang("VALUE")+":",   stage_values[entry["value"]]);
         }
     html    += tab.row(lang("BROOD")+":",   brood_list[entry["brood"]]);
     html    += tab.row(lang("COMMENT")+":", entry["comment"]);
-    if (app_admin_allowed == false) {
+    if (app_admin_allowed === false) {
         delete commands["EDIT"];
         delete commands["DELETE"];
         //html    += tab.row("",    "&nbsp;");
@@ -205,16 +205,17 @@ function diary_showDetails(date, title, entry) {
     html    += "&nbsp;<br/>";
     html    += "<input id='diary_entry' value='"+JSON.stringify(entry)+"' style='display:none;'>";
 
-    appMsg.dialog(html, cmd="", height="300px", width=appMsg.message_width+"px", close=true, cmd_buttons=commands);
+    appMsg.dialog(html, "", "300px", appMsg.message_width+"px", true, commands);
     }
 
 /*
 * list existing broods (list, edit, delete)
 */
 function diary_showBroodsOverview() {
-    var tab  = new birdhouse_table();
-    var onclick = "alert('not implemented yet');";
-    var html = "";
+    let tab  = new birdhouse_table();
+    let onclick = "alert('not implemented yet');";
+    let onclick2 = "";
+    let html = "";
 
     html     += "&nbsp;<br/><center>";
     html     += "<div class='brood-list'>";
@@ -230,7 +231,7 @@ function diary_showBroodsOverview() {
         });
 
     onclick = "diary_editBrood();";
-    entry     = "<i>" + lang("NEW_ENTRY") + "</i><div class='milestone type-edit' onclick=\""+onclick+"\">" + image_add + "</div>";
+    let entry = "<i>" + lang("NEW_ENTRY") + "</i><div class='milestone type-edit' onclick=\"" + onclick + "\">" + image_add + "</div>";
     html     += tab.row("", entry);
 
     html     += tab.end();
@@ -244,42 +245,42 @@ function diary_showBroodsOverview() {
 * form to edit an existing oder create a new brood entry
 */
 function diary_editBrood(brood_id="new") {
-    var command = "ADD";
-    var entry   = "";
-    var fields  = "add_id,add_title,add_id_org,add_bird,add_comment";
-    if (brood_id != "" && diary_data["broods"][brood_id]) { entry = diary_data["broods"][brood_id]; }
+    let command = "ADD";
+    let entry   = "";
+    let fields  = "add_id,add_title,add_id_org,add_bird,add_comment";
+    if (brood_id !== "" && diary_data["broods"][brood_id]) { entry = diary_data["broods"][brood_id]; }
 
-    var commands = {
+    let commands = {
     "SAVE":   [lang("SAVE"),   "diary_saveEntry('"+brood_id+"','brood', '"+fields+"');"],
     "DELETE": [lang("DELETE"), "diary_deleteEntryConfirm('"+brood_id+"', '"+entry["title"]+"', true);"],
     "CLOSE":  [lang("CANCEL"), ""]
     };
 
-    var tab     = new birdhouse_table();
+    let tab     = new birdhouse_table();
     tab.style_cells["padding"] = "2px";
 
-    if (entry == "") {
+    if (entry === "") {
         entry = {};
-        var fields = ["title", "bird", "comment"];
-        for (var i=0;i<fields.length;i++) {
+        let fields = ["title", "bird", "comment"];
+        for (let i=0;i<fields.length;i++) {
             entry[fields[i]] = "";
             }
         }
 
-    var html = "";
+    let html = "";
     html    += "<div style='float:left;width:100%;'><h2><center>&nbsp;&nbsp;"+lang(command)+"</center></h2></div><div style='float:left;width:100%;'><hr/><br/></div>";
     html    += tab.start();
-    html    += tab.row("ID:",                    birdhouse_edit_field(id="add_id", field="this:"+brood_id, type="input", options="", data_type="string") +
+    html    += tab.row("ID:",                    birdhouse_edit_field("add_id", "this:"+brood_id, "input", "", "string") +
                                                  "<input id='add_id_org' value='"+brood_id+"' style='display:none;'>");
-    html    += tab.row(lang("TITLE")+":",        birdhouse_edit_field(id="add_title", field="this:"+entry["title"], type="input", options="", data_type="string"));
-    html    += tab.row(lang("BIRD_SPECIES")+":", birdhouse_edit_field(id="add_bird",  field="this:"+entry["bird"], type="select_dict_sort", options=bird_definition, data_type="integer"));
-    html    += tab.row(lang("COMMENT")+":",      birdhouse_edit_field(id="add_comment", field="this:"+entry["comment"], type="input", options="", data_type="string"));
+    html    += tab.row(lang("TITLE")+":",        birdhouse_edit_field("add_title", "this:"+entry["title"], "input", "", "string"));
+    html    += tab.row(lang("BIRD_SPECIES")+":", birdhouse_edit_field("add_bird",  "this:"+entry["bird"], "select_dict_sort", bird_definition, "integer"));
+    html    += tab.row(lang("COMMENT")+":",      birdhouse_edit_field("add_comment", "this:"+entry["comment"], "input", "", "string"));
     html    += tab.end();
     html    += "&nbsp;<br/>";
     html    += "&nbsp;<br/>";
     html    += "<input id='diary_field_list' value='"+fields+"' style='display:none;'>";
 
-    appMsg.dialog(html, cmd="", height="380px", width=appMsg.message_width+"px", close=true, cmd_buttons=commands);
+    appMsg.dialog(html, "", "380px", appMsg.message_width+"px", true, commands);
     }
 
 /*
@@ -290,48 +291,48 @@ function diary_editBrood(brood_id="new") {
 * @param (object) entry: data of the milestone
 */
 function diary_editDetails(date, title="", entry="") {
-    var command = "ADD";
-    var fields  = "add_key,add_title,add_title_org,add_type,add_value,add_brood,add_comment";
-    var save    = "diary_saveEntry(\""+date+"\", \""+title+"\", \""+fields+"\");";
-    var btn     = "<button onclick='"+save+"' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
+    let command = "ADD";
+    let fields  = "add_key,add_title,add_title_org,add_type,add_value,add_brood,add_comment";
+    let save    = "diary_saveEntry(\""+date+"\", \""+title+"\", \""+fields+"\");";
+    let btn     = "<button onclick='"+save+"' style='background:gray;width:100px;float:left;'>"+lang("SAVE")+"</button>";
 
-    var commands = {
+    let commands = {
     "SAVE":   [lang("SAVE"), "diary_saveEntry('"+date+"', '"+title+"', '"+fields+"');"],
     "CLOSE":  [lang("CANCEL"), ""]
     };
 
-    var tab     = new birdhouse_table();
+    let tab     = new birdhouse_table();
     tab.style_cells["padding"] = "2px";
 
-    if (entry != "") {
+    if (entry !== "") {
         if (document.getElementById(entry)) { entry = JSON.parse(document.getElementById(entry).value); command = "EDIT"; }
         else                                { entry = "" };
     }
-    if (entry == "") {
+    if (entry === "") {
         entry = {};
-        var fields = ["type", "value", "brood", "comment"];
-        for (var i=0;i<fields.length;i++) {
+        let fields = ["type", "value", "brood", "comment"];
+        for (let i=0;i<fields.length;i++) {
             entry[fields[i]] = "";
             }
         }
 
-    var html = "";
+    let html = "";
     html    += "<div style='float:left;width:100%;'><h2><center>&nbsp;&nbsp;"+lang(command)+"</center></h2></div><div style='float:left;width:100%;'><hr/><br/></div>";
     html    += tab.start();
     html    += tab.row(lang("DATE")+":",    date + "<input id='add_key' value='"+date+"' style='display:none;'>");
-    html    += tab.row(lang("TITLE")+":",   birdhouse_edit_field(id="add_title", field="this:"+title, type="input", options="", data_type="string") +
+    html    += tab.row(lang("TITLE")+":",   birdhouse_edit_field("add_title", "this:"+title, "input", "", "string") +
                                    "<input id='add_title_org' value='"+title+"' style='display:none;'>");
-    html    += tab.row(lang("TYPE")+":",    birdhouse_edit_field(id="add_type",  field="this:"+entry["type"], type="select_dict_sort", options=stage_definition, data_type="integer"));
-    html    += tab.row(lang("VALUE")+":",   birdhouse_edit_field(id="add_value", field="this:"+entry["value"], type="select_dict_sort", options=stage_values, data_type="string"));
-    html    += tab.row(lang("BROOD")+":",   birdhouse_edit_field(id="add_brood", field="this:"+entry["brood"], type="select_dict_sort", options=brood_list, data_type="string"));
-    html    += tab.row(lang("COMMENT")+":", birdhouse_edit_field(id="add_comment", field="this:"+entry["comment"], type="input", options="", data_type="string"));
+    html    += tab.row(lang("TYPE")+":",    birdhouse_edit_field("add_type",  "this:"+entry["type"], "select_dict_sort", stage_definition, "integer"));
+    html    += tab.row(lang("VALUE")+":",   birdhouse_edit_field("add_value", "this:"+entry["value"], "select_dict_sort", stage_values, "string"));
+    html    += tab.row(lang("BROOD")+":",   birdhouse_edit_field("add_brood", "this:"+entry["brood"], "select_dict_sort", brood_list, "string"));
+    html    += tab.row(lang("COMMENT")+":", birdhouse_edit_field("add_comment", "this:"+entry["comment"], "input", "", "string"));
     html    += tab.end();
     html    += "&nbsp;<br/>";
     html    += "&nbsp;<br/>";
     html    += "<input id='diary_field_list' value='"+fields+"' style='display:none;'>";
     //appMsg.confirm(html, "", "440");
 
-    appMsg.dialog(html, cmd="", height="380px", width=appMsg.message_width+"px", close=true, cmd_buttons=commands);
+    appMsg.dialog(html, "", "380px", appMsg.message_width+"px", true, commands);
     }
 
 /*
@@ -342,17 +343,16 @@ function diary_editDetails(date, title="", entry="") {
 * @param (object) id_list: list of field ids
 */
 function diary_saveEntry(date, org_title, id_list) {
-    var commands = [];
-    var fields   = id_list.split(",");
-    var entry    = {};
+    let commands = [];
+    let fields   = id_list.split(",");
+    let entry    = {};
 
-    if (org_title == "brood")   { commands = ["diary-edit-brood", date]; }
-    else                        { commands = ["diary-edit-milestone", date, org_title]; }
+    if (org_title === "brood")   { commands = ["diary-edit-brood", date]; }
+    else                         { commands = ["diary-edit-milestone", date, org_title]; }
 
-    for (var i=0;i<fields.length;i++) {
-        var key  = fields[i].replace("add_","");
-        var data = getValueById(fields[i]);
-        entry[key] = data;
+    for (let i=0;i<fields.length;i++) {
+        let key  = fields[i].replace("add_","");
+        entry[key] = getValueById(fields[i]);
     }
 
     birdhouse_apiRequest("POST", commands, entry, birdhouse_AnswerEditSend);
@@ -366,9 +366,9 @@ function diary_saveEntry(date, org_title, id_list) {
 * @param (boolean) brood: true if to delete a brood entry, false for milestones
 */
 function diary_deleteEntryConfirm(date, title, brood=false) {
-    var message         = lang("DELETE_ENTRY",["<b>"+title+"</b> ("+date+")"]);
+    let message         = lang("DELETE_ENTRY",["<b>"+title+"</b> ("+date+")"]);
     if (brood) { title = "brood"; }
-    var delete_command  = "diary_deleteEntry('"+date+"','"+title+"')";
+    let delete_command  = "diary_deleteEntry('"+date+"','"+title+"')";
     appMsg.confirm(message, delete_command, 200);
 }
 
@@ -379,10 +379,10 @@ function diary_deleteEntryConfirm(date, title, brood=false) {
 * @param (string) title: title / key for the entry
 */
 function diary_deleteEntry(date, title) {
-    var commands = [];
+    let commands = [];
 
-    if (title == "brood")   { commands = ["diary-delete-brood", date]; }
-    else                    { commands = ["diary-delete-milestone", date, title]; }
+    if (title === "brood")   { commands = ["diary-delete-brood", date]; }
+    else                     { commands = ["diary-delete-milestone", date, title]; }
     birdhouse_apiRequest("POST", commands, "", birdhouse_AnswerEditSend);
 }
 
@@ -390,9 +390,9 @@ function diary_deleteEntry(date, title) {
 * create string with details for the currently active brood
 */
 function diary_activeBrood() {
-    var html    = "";
-    var data    = app_data["STATUS"]["brood"];
-    var details = data["brood_details"];
+    let html    = "";
+    let data    = app_data["STATUS"]["brood"];
+    let details = data["brood_details"];
 
     diary_setVariables();
 
@@ -400,10 +400,10 @@ function diary_activeBrood() {
         html += "<center><div class='brood-info'>";
         html += "<text class='milestone type-edit' onclick='birdhousePrint_page(\"DIARY\");' style='float:none; display:inline-block;height:15px;width:15px;'>" + image_info + "</text>";
         html += "&nbsp;";
-        if (data["days_since_start"] == 0) {
+        if (data["days_since_start"] === 0) {
             html += lang("ACTIVE_BROOD_TODAY", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
             }
-        else if (data["days_since_start"] == 1) {
+        else if (data["days_since_start"] === 1) {
             html += lang("ACTIVE_BROOD_1DAY", [bird_lang(details["bird"]), stage_definition[data["stage"]], data["days_since_start"]]);
             }
         else {
@@ -490,88 +490,96 @@ function diary_createCalendar(year, month) {
             });
         week.forEach(day => {
 
-            const dayDiv            = document.createElement('div');
-            dayDiv.className        = 'day';
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day';
 
+            let dayEntry;
             if (day) {
-                const d             = day.getDate();
-                const dateKey       = `${day.getFullYear()}${String(day.getMonth() + 1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
-                const today         = new Date();
+                const d = day.getDate();
+                const dateKey = `${day.getFullYear()}${String(day.getMonth() + 1).padStart(2, '0')}${String(d).padStart(2, '0')}`;
+                const today = new Date();
 
                 // Compare the year, month, and day (ignore time part)
-                const isToday       = day.getFullYear() === today.getFullYear() &&
-                                      day.getMonth() === today.getMonth() &&
-                                      day.getDate() === today.getDate();
-                const isFuture      = day > today;
-                var edit            = "";
-                var archive         = "";
-                var date_key        = day.getFullYear() + "" + String(day.getMonth() + 1).padStart(2, '0') + "" + String(day.getDate()).padStart(2, '0');
+                const isToday = day.getFullYear() === today.getFullYear() && day.getMonth() === today.getMonth() && day.getDate() === today.getDate();
+                const isFuture = day > today;
+                let edit = "";
+                let archive = "";
+                let date_key = day.getFullYear() + "" + String(day.getMonth() + 1).padStart(2, '0') + "" + String(day.getDate()).padStart(2, '0');
 
                 if (isToday) {
                     //dayDiv.style.backgroundColor = "#450000";
                     dayDiv.className = "day today";
-                    }
+                }
 
                 if (app_admin_allowed) {
-                    var on_click    = "diary_editDetails(\""+dateKey+"\");"
-                    edit            = "<div class='milestone type-edit' onclick='"+on_click+"'>"+image_add+"</div>";
-                    }
+                    let on_click = "diary_editDetails(\"" + dateKey + "\");"
+                    edit = "<div class='milestone type-edit' onclick='" + on_click + "'>" + image_add + "</div>";
+                }
 
-                dayDiv.innerHTML    = `<strong>${d}${edit}</strong>`;
-                dayEntry            = document.createElement("div");
-                dayEntry.className  = "day-entries";
+                dayDiv.innerHTML = `<strong>${d}${edit}</strong>`;
+                dayEntry = document.createElement("div");
+                dayEntry.className = "day-entries";
 
                 if (archive_keys.includes(dateKey)) {
-                    icon            = document.createElement("div");
-                    icon.className  = "milestone type-0";
-                    icon.title      = lang("ARCHIVE");
-                    icon.innerHTML  = image_archive;
+                    icon = document.createElement("div");
+                    icon.className = "milestone type-0";
+                    icon.title = lang("ARCHIVE");
+                    icon.innerHTML = image_archive;
                     icon.onclick = () => {
                         birdhousePrint_page("TODAY", app_active.cam, dateKey);
-                        };
+                    };
                     dayEntry.appendChild(icon);
-                    }
+                }
                 if (video_keys.includes(dateKey)) {
-                    icon            = document.createElement("div");
-                    icon.className  = "milestone type-0";
-                    icon.title      = lang("VIDEOS");
-                    icon.innerHTML  = image_video;
+                    icon = document.createElement("div");
+                    icon.className = "milestone type-0";
+                    icon.title = lang("VIDEOS");
+                    icon.innerHTML = image_video;
                     icon.onclick = () => {
                         birdhousePrint_page("VIDEOS", app_active.cam, dateKey);    // !!!!!! add parameters to directly open the right month (e.g. using toggles);
-                        };
+                    };
                     dayEntry.appendChild(icon);
-                    }
+                }
 
                 if (dataset[dateKey]) {
                     const milestones = dataset[dateKey];
                     Object.entries(milestones).forEach(([title, info]) => {
-                        const milestone         = document.createElement('div');
-                        milestone.className     = `milestone type-${info.type} filled`;
-                        milestone.title         = title;
-                        milestone.innerHTML     = " ";
-                        if (info.value != "" && info.value != "start" && info.value != "end" && info.value != "termination" && info.value != "one_day") {
-                                milestone.textContent = info.value;
-                                milestone.className = `milestone type-${info.type}`;
-                                }
+                        const milestone = document.createElement('div');
+                        milestone.className = `milestone type-${info.type} filled`;
+                        milestone.title = title;
+                        milestone.innerHTML = " ";
+                        if (info.value !== "" && info.value !== "start" && info.value !== "end" && info.value !== "termination" && info.value !== "one_day") {
+                            milestone.textContent = info.value;
+                            milestone.className = `milestone type-${info.type}`;
+                        }
 
                         // visualize stage by coloring the <hr/> line element
-                        if (info.value == "start")   { dayDiv.firstChild.className = `stage type-${info.type}`; last_stage_value = info.type; }
-                        if (info.value == "one_day") { dayDiv.firstChild.className = `stage type-${info.type}`; }
-                        if (last_stage_value != "")  { dayDiv.firstChild.className = `stage type-${last_stage_value}`; }
-                        if (last_stage_value == "end" || last_stage_value == "cancel")  { last_stage_value = ""; }
+                        if (info.value === "start") {
+                            dayDiv.firstChild.className = `stage type-${info.type}`;
+                            last_stage_value = info.type;
+                        }
+                        if (info.value === "one_day") {
+                            dayDiv.firstChild.className = `stage type-${info.type}`;
+                        }
+                        if (last_stage_value !== "") {
+                            dayDiv.firstChild.className = `stage type-${last_stage_value}`;
+                        }
+                        //if (last_stage_value == "end" || last_stage_value == "cancel")  { last_stage_value = ""; }
+                        if (info.value === "end" || info.value === "cancel" || info.value === "termination") {
+                            last_stage_value = "end";
+                        }
 
                         milestone.onclick = () => {
                             diary_showDetails(dateKey, title, info);
-                            };
+                        };
                         dayEntry.appendChild(milestone);
-                        });
-                    }
-                else if (last_stage_value != "" && !isFuture)  {
+                    });
+                } else if (last_stage_value !== "" && !isFuture) {
                     dayDiv.firstChild.className = `stage type-${last_stage_value}`;
-                    }
+                }
 
                 dayDiv.appendChild(dayEntry);
-                }
+            }
 
             weekRow.appendChild(dayDiv);
             });

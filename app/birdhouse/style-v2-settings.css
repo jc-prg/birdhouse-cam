@@ -9,6 +9,7 @@
     --setting-bg-line: white;
 
     --setting-btn-index-background: #333399;
+    --setting-btn-index-color: #FFFFFF;
     --setting-btn-index-border: #5555AA;
     --setting-btn-index-info-background: #111122;
     --setting-btn-index-info-border: #339;
@@ -163,6 +164,7 @@
     padding         :   5px;
     float           :  left;
     background      : var(--setting-btn-index-background);
+    color           : var(--setting-btn-index-color);
     border          : solid 2px var(--setting-btn-index-border);
     font-size       : 10px;
     }
