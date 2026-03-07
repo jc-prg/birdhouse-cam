@@ -96,12 +96,36 @@ def on_kill(signum, handler):
     sys.exit()
 
 
+def write_to_error_log(exc_type, message):
+    """
+    write exception message to log
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = ("-" * 50) + "\n" + timestamp + f"  -> {exc_type} EXCEPTION:\n" + ("-" * 50)
+
+    with open(rm3presets.log_filename_error, "a", encoding="utf-8") as f:
+        f.write(f"{timestamp}\n{message}\n")
+
+
 def on_exception(exc_type, value, trace_back):
     """
     grab all exceptions and write them to the logfile (if active)
     """
+    jsonAppDir = os.path.dirname(os.path.abspath(__file__))
+
     tb_str = ''.join(traceback.format_exception(exc_type, value, trace_back))
-    srv_logging.error("Exception:\n\n" + tb_str + "\n")
+    log.error(f"EXCEPTION:\n\n{tb_str}\n")
+    write_to_error_log("MAIN", tb_str)
+
+
+def on_thread_exception(args):
+    """
+    send thread exceptions to logging
+    """
+    tb_str = ''.join(traceback.format_exception(args.exc_type,args.exc_value,args.exc_traceback))
+    log.error(f"EXCEPTION IN THREAD {args.thread.name}:\n\n{tb_str}\n")
+    write_to_error_log("THREAD", tb_str)
 
 
 def on_exception_setting():
@@ -1696,6 +1720,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 
 on_exception_setting()
 sys.excepthook = on_exception
+threading.excepthook = on_thread_exception
 
 
 if __name__ == "__main__":
