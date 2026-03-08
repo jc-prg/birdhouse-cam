@@ -110,11 +110,11 @@ class BirdhouseDiary {
             this.brood_list     = {};
 
             Object.entries(this.diary_data["broods"]).forEach(([key,entry]) => {
-                this.brood_list[key] = this.diary_data["broods"][key]["title"] + " (" + bird_lang(this.diary_data["broods"][key]["bird"]) + ")";
+                this.brood_list[key] = this.diary_data["broods"][key]["title"] + " (" + bhObjects.bird_lang(this.diary_data["broods"][key]["bird"]) + ")";
             });
 
             Object.entries(this.diary_data["birds"]).forEach(([key,entry]) => {
-                this.bird_definition[key] = bird_lang(key);
+                this.bird_definition[key] = bhObjects.bird_lang(key);
             });
 
         }
@@ -188,7 +188,7 @@ class BirdhouseDiary {
 
             onclick = this.name+".editBrood(id='"+key+"');";
             onclick2 = this.name+".deleteEntryConfirm(id='"+key+"', '"+this.diary_data["broods"][key]["title"]+"', true);";
-            entry  = this.diary_data["broods"][key]["title"] + " (" + bird_lang(this.diary_data["broods"][key]["bird"]) + ")";
+            entry  = this.diary_data["broods"][key]["title"] + " (" + bhObjects.bird_lang(this.diary_data["broods"][key]["bird"]) + ")";
             entry += "<div class='milestone type-edit' onclick=\""+onclick2+"\">" + this.image_delete + "</div>";
             entry += "<div class='milestone type-edit' onclick=\""+onclick+"\">" + this.image_edit + "</div>";
             html  += this.tab.row(key, entry);
@@ -360,13 +360,13 @@ class BirdhouseDiary {
             html += "<text class='milestone type-edit' onclick='birdhousePrint_page(\"DIARY\");' style='float:none; display:inline-block;height:15px;width:15px;'>" + this.image_info + "</text>";
             html += "&nbsp;";
             if (data["days_since_start"] === 0) {
-                html += lang("ACTIVE_BROOD_TODAY", [bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
+                html += lang("ACTIVE_BROOD_TODAY", [bhObjects.bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
             }
             else if (data["days_since_start"] === 1) {
-                html += lang("ACTIVE_BROOD_1DAY", [bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
+                html += lang("ACTIVE_BROOD_1DAY", [bhObjects.bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
             }
             else {
-                html += lang("ACTIVE_BROOD", [bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
+                html += lang("ACTIVE_BROOD", [bhObjects.bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
             }
             html += "</div></center>";
 

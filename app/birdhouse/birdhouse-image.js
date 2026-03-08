@@ -650,11 +650,11 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
                 var amount = counted_labels[key];
                 if (amount > 1) { info = amount; }
                 else            { info = confidence[key] + "%"; }
-                image_data["description_hires"] += "[div class=detection_label style=cursor:default;]&nbsp;"+bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
+                image_data["description_hires"] += "[div class=detection_label style=cursor:default;]&nbsp;"+bhObjects.bird_lang(key)+"&nbsp;("+info+")&nbsp;[/div]";
                 });
 
             if (app_admin_allowed) {
-                var cmd_edit_labels = "onclick=birdhouse_labels_edit('"+app_active.date+"','"+entry_id+"','"+app_active.cam+"','');";
+                var cmd_edit_labels = "onclick=bhObjects.labels_edit('"+app_active.date+"','"+entry_id+"','"+app_active.cam+"','');";
                 image_data["description_hires"] += "[div class=detection_label style=cursor:default "+cmd_edit_labels+"][img src='/birdhouse/img/edit.png' style='max-height:10px;max-width:10px;'][/div]";
                 }
 
