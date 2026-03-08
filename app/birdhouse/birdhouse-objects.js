@@ -299,6 +299,8 @@ class BirdhouseObjects {
     }
 }
 
+
 const bhObjects = new BirdhouseObjects("bhObjects");
+
 
 app_scripts_loaded += 1;
