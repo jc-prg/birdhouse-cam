@@ -87,8 +87,6 @@ function app_setting_entries() {
     // add your setting entries here
     // appSettings.add_entry(id, title, icon, call_function, show_header=true);
 
-    bhSettings  = new BirdhouseAppSettings("bhSettings");
-
     appSettings.icon_dir = "framework/";
     appSettings.setting_entries = {};
 

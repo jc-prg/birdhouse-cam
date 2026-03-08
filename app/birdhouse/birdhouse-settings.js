@@ -3,23 +3,6 @@
 //--------------------------------------
 
 let app_settings_active = false;
-let bhSettings;
-
-
-/*
-* call specific settings page
-*
-* @param (string) page: settings page to be displayed
-*/
-function birdhouse_SETTINGS( page, data ) {
-
-    console.log("birdhouse_SETTINGS: Load " + page);
-
-    if (page === "SETTINGS_CAMERAS")           { birdhouseDevices(lang(page), data, "settings", "cameras"); }
-	else if (page === "SETTINGS_DEVICES")      { birdhouseDevices(lang(page), data, "settings", "devices"); }
-	else if (page === "SETTINGS_IMAGE")        { birdhouseDevices_cameraSettings(data); }
-	else if (page === "SETTINGS_STATISTICS")   { birdhouse_STATISTICS(data); }
-    }
 
 
 /*
@@ -996,6 +979,9 @@ class BirdhouseAppSettings {
 			}
 		}
 }
+
+
+const bhSettings = new BirdhouseAppSettings("bhSettings");
 
 
 app_scripts_loaded += 1;
