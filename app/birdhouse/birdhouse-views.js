@@ -102,7 +102,9 @@ function birdhouse_INDEX(data, camera, object=false) {
         var replace_tags = {};
         replace_tags["OFFLINE_URL"]     = app_error_connect_image;
         replace_tags["CAM1_ID"]         = active_camera;
-        replace_tags["ACTIVE_BROOD"]    = diary_activeBrood();
+        if (bhDiary) {
+            replace_tags["ACTIVE_BROOD"] = bhDiary.activeBrood();
+        }
 
         // ???? should be solved earlier, is just a workaround :-(
         if (app_camera_source[active_cam["name"]].indexOf("http:") > -1) {stream_server = "";};

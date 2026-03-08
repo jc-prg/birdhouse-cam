@@ -23,20 +23,20 @@ var app_session_id           = "";
 var app_status_commands      = ["last-answer"];
 
 
-/**
+/*
 * create menu entries for the app
 *
-* @param (dict) object - data returned form server API
+* @param (object) data - data returned form server API
 * @returns (array) - returns an array of array that contains the menu definition
 */
 function app_menu_entries(data) {
-	var hideSettings     = "birdhouse_settings.toggle(true);appSettings.hide();";
-	var weather_active   = data["SETTINGS"]["localization"]["weather_active"];
-	var detection_active = data["STATUS"]["object_detection"]["active"];
-	var admin_type       = data["SETTINGS"]["server"]["admin_login"];
+	const weather_active   = data["SETTINGS"]["localization"]["weather_active"];
+	const detection_active = data["STATUS"]["object_detection"]["active"];
+	const admin_type       = data["SETTINGS"]["server"]["admin_login"];
+    let app_menu;
 
     if (!app_birdhouse_closed || app_admin_allowed) {
-        var app_menu = [
+        app_menu = [
             [lang("LIVESTREAM"),   "script", "birdhousePrint_page('INDEX');"],
             [lang("TODAY"),        "script", "birdhousePrint_page('TODAY');"],
             [lang("ARCHIVE"),      "script", "birdhousePrint_page('ARCHIVE');"],
@@ -59,14 +59,14 @@ function app_menu_entries(data) {
             [lang("TODAY_COMPLETE"),    "script", "birdhousePrint_page('TODAY_COMPLETE');"],
             [lang("SETTINGS"),          "script", "birdhousePrint_page('SETTINGS');"],
             ]);
-            if (admin_type == "LOGIN") {
+            if (admin_type === "LOGIN") {
                 app_menu = app_menu.concat([
                 ["LINE"],
                 [lang("LOGOUT"), "script", "birdhousePrint_page('LOGOUT');"],
                 ]);
                 }
             }
-        else if (admin_type == "LOGIN") {
+        else if (admin_type === "LOGIN") {
             app_menu = app_menu.concat([
                 ["LINE"],
                 [lang("LOGIN"),     "script", "birdhousePrint_page('LOGIN','INDEX');"],
@@ -74,7 +74,7 @@ function app_menu_entries(data) {
             }
         }
     else {
-        var app_menu = [[lang("LOGIN"),     "script", "birdhousePrint_page('LOGIN','INDEX');"]];
+        app_menu = [[lang("LOGIN"),     "script", "birdhousePrint_page('LOGIN','INDEX');"]];
         }
 	return app_menu;
 }
@@ -87,24 +87,20 @@ function app_setting_entries() {
     // add your setting entries here
     // appSettings.add_entry(id, title, icon, call_function, show_header=true);
 
-    birdhouse_settings.init();
-
-    var hideSettings     = "birdhouse_settings.toggle(true);";
-    var init             = "appSettings.clear_frames();appSettings.show();"
+    bhSettings  = new BirdhouseAppSettings("bhSettings");
 
     appSettings.icon_dir = "framework/";
-
     appSettings.setting_entries = {};
 
     appSettings.add_entry("START1", "jc://birdhouse-cam/",  "birdhouse/img/bird.gif",   "");
     appSettings.add_entry("START2", "<div id='device_status_short'><b>"+lang("DEVICE_OVERVIEW")+"</b><br/>"+lang("PLEASE_WAIT")+" ...</div>",  "",   "");
 
-    appSettings.add_entry("SETTINGS_CAMERAS",       lang("SETTINGS_CAMERAS"),       "birdhouse/img/av_device",   "birdhouse_settings.create_new('SETTINGS_CAMERAS');");
-    appSettings.add_entry("SETTINGS_IMAGE",         lang("SETTINGS_IMAGE"),         "birdhouse/img/image",       "birdhouse_settings.create_new('SETTINGS_IMAGE');");
-    appSettings.add_entry("SETTINGS_DEVICES",       lang("SETTINGS_DEVICES"),       "birdhouse/img/temperature", "birdhouse_settings.create_new('SETTINGS_DEVICES');");
-    appSettings.add_entry("SETTINGS_INFORMATION",   lang("SETTINGS_INFORMATION"),   "info",                      "birdhouse_settings.create_new('SETTINGS_INFORMATION');");
-    appSettings.add_entry("SETTINGS_STATISTICS",    lang("SETTINGS_STATISTICS"),    "birdhouse/img/statistics",  "birdhouse_settings.create_new('SETTINGS_STATISTICS');");
-    appSettings.add_entry("SETTINGS_SERVER",        lang("SETTINGS_SERVER"),        "settings",                  "birdhouse_settings.create_new('SETTINGS_SERVER');");
+    appSettings.add_entry("SETTINGS_CAMERAS",       lang("SETTINGS_CAMERAS"),       "birdhouse/img/av_device",   "bhSettings.create_new('SETTINGS_CAMERAS');");
+    appSettings.add_entry("SETTINGS_IMAGE",         lang("SETTINGS_IMAGE"),         "birdhouse/img/image",       "bhSettings.create_new('SETTINGS_IMAGE');");
+    appSettings.add_entry("SETTINGS_DEVICES",       lang("SETTINGS_DEVICES"),       "birdhouse/img/temperature", "bhSettings.create_new('SETTINGS_DEVICES');");
+    appSettings.add_entry("SETTINGS_INFORMATION",   lang("SETTINGS_INFORMATION"),   "info",                      "bhSettings.create_new('SETTINGS_INFORMATION');");
+    appSettings.add_entry("SETTINGS_STATISTICS",    lang("SETTINGS_STATISTICS"),    "birdhouse/img/statistics",  "bhSettings.create_new('SETTINGS_STATISTICS');");
+    appSettings.add_entry("SETTINGS_SERVER",        lang("SETTINGS_SERVER"),        "settings",                  "bhSettings.create_new('SETTINGS_SERVER');");
 
     appSettings.add_entry("CLOSE", "<div id='app_open_close'><b>"+lang("CLOSE_BIRDHOUSE")+"</b><br/>"+lang("PLEASE_WAIT")+" ...</div>",  "",   "");
 
@@ -113,14 +109,14 @@ function app_setting_entries() {
 /*
 * function to request status, update menu etc. (including initial load)
 *
-* @param (dict) object - data returned form server API
+* @param (data) object - data returned form server API
 */
 function app_initialize(data) {
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 	app_api_version = data["API"]["version"];
 	app_data = data;
 
-	var settings = data["SETTINGS"];
+	const settings = data["SETTINGS"];
     if (settings["localization"]["language"]) {
         LANG = settings["localization"]["language"];
         app_setting_entries();
@@ -130,12 +126,12 @@ function app_initialize(data) {
 /*
 * function to request status, update menu etc. (including initial load)
 *
-* @param (dict) object - data returned form server API
+* @param (data) object - data returned form server API
 */
 function app_status(data) {
 
 	if (reload) {
-	    var maintenance = data["API"]["maintenance"];
+	    const maintenance = data["API"]["maintenance"];
 	    if (maintenance) {
 	        app_birdhouse_closed = maintenance["closed"];
 	        }
@@ -145,17 +141,15 @@ function app_status(data) {
 		reload = false;
 		}
 	else {
-        var active = data["DATA"]["active"];
-        var status = data["STATUS"]["server"] ;
+        let status = data["STATUS"]["server"] ;
 
-        if (status["last_answer"] != "") {
-            var msg = status["last_answer"];
+        if (status["last_answer"] !== "") {
+            let msg = status["last_answer"];
             appMsg.alert(lang(msg[0]));
-            if (msg[0] == "RANGE_DONE") { button_tooltip.hide("info"); }
+            if (msg[0] === "RANGE_DONE") { button_tooltip.hide("info"); }
             birdhouseReloadView();
             }
-        // if (active["active_cam"] && active["active_cam"] != "")   { app_active.cam = active["active_cam"]; }
-        if (status["background_process"] == true)	{ setTextById("statusLED","<div id='blue'></div>"); }
+        if (status["background_process"] === true)	{ setTextById("statusLED","<div id='blue'></div>"); }
         else 					                	{ setTextById("statusLED","<div id='green'></div>"); }
         birdhouseStatus_print(data);
         }
@@ -180,7 +174,7 @@ function app_click_menu() {
 /*
 * add code when forced a reload
 *
-* @param (dict) object - data returned form server API
+* @param (object) data - data returned form server API
 */
 function app_force_reload(data) {
 	birdhouseReloadView();
@@ -212,9 +206,9 @@ function app_screen_size_changed(width, height) {
 *
 * @param (boolean) error: true if connection error
 */
-app_connection_error = false;
+let app_connection_error = false;
 function app_connection_lost(error=false) {
-    if (app_connection_error != error) {
+    if (app_connection_error !== error) {
         if (error) {
             // code if lost connection
             app_connection_error = true;

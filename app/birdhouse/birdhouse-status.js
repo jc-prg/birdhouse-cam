@@ -77,7 +77,7 @@ function birdhouseStatus_connectionError() {
     setStatusColor(status_id="status_active_WEATHER", "red");
     setStatusColor(status_id="status_error_WEATHER", "black");
 
-    birdhouse_settings.server_dashboard_fill(app_data);
+    bhSettings.server_dashboard_fill(app_data);
 }
 
 /*
@@ -137,14 +137,14 @@ function birdhouseStatus_print(data) {
     if (appSettings.loaded_index)                           {
         setTextById("device_status_short", birdhouseDevices("", data, "short"));
 
-        setTextById("app_open_close", birdhouse_settings.settings_app_open_close());
+        setTextById("app_open_close", bhSettings.settings_app_open_close());
         appSettings.loaded_index = false;
         }
 
     if (pages_settings.includes(app_active.page))           { birdhouseStatus_system(data); }
     if (pages_settings.includes(app_active.page))           { birdhouseStatus_processing(data); }
     if (pages_settings.includes(app_active.page))           { birdhouseStatus_relays(data); }
-    if (pages_settings.includes(app_active.page))           { birdhouse_settings.server_dashboard_fill(data); }
+    if (pages_settings.includes(app_active.page))           { bhSettings.server_dashboard_fill(data); }
 
     if (app_active.page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_cameras(data); }
     if (app_active.page == "INDEX" || "SETTINGS_CAMERAS")   { birdhouseStatus_microphones(data); }

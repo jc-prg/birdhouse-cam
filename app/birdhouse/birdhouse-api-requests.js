@@ -106,7 +106,7 @@ function birdhouse_logout() {
 function birdhouse_logoutReturn() {
 
     birdhouse_adminAnswer(false);
-    birdhouse_settings.toggle(true);
+    bhSettings.toggle(true);
     appSettings.hide();
 
     setTimeout(function(){
