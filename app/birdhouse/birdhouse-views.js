@@ -1108,8 +1108,6 @@ class BirdhouseViews {
         }
         return html;
     }
-
-
 }
 
 
