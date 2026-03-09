@@ -13,21 +13,29 @@ class BirdhouseAppSettings {
     * set initial variables
     */
     constructor (name="Settings") {
-        this.name            = name;
-        this.set             = appSettings;
-        this.tab             = new birdhouse_table();
+        this.name = name;
+        this.tab = new birdhouse_table();
         this.tab.style_rows["height"] = "27px";
         this.tab.style_cells["width"] = "40%";
+        this.loading = "<center>&nbsp;<br/>" + lang("PLEASE_WAIT") + " ...<br/>&nbsp;</center>";
+        this.not_implemented = "<center>&nbsp;<br/>" + lang("NOT_IMPLEMENTED") + "<br/>&nbsp;</center>";
+    }
+
+    /*
+    * add vars, that are loaded a bit later
+     */
+    init() {
+        this.set             = appSettings;
         this.frames_settings = this.set.frames_settings;
         this.frames_content  = this.set.frames_content;
-        this.loading         = "<center>&nbsp;<br/>" + lang("PLEASE_WAIT") + " ...<br/>&nbsp;</center>";
-        this.not_implemented = "<center>&nbsp;<br/>" + lang("NOT_IMPLEMENTED") + "<br/>&nbsp;</center>";
-        }
+    }
 
     /*
     * prepare frame and initiate loading of selected setting category (old view)
     */
     create (type="SETTINGS") {
+
+        this.init();
         this.setting_type = type;
         app_active.page = type;
         birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);

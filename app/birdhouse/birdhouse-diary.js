@@ -68,7 +68,7 @@ class BirdhouseDiary {
     *
     * @param (object) data: API response
     */
-    init (data) {
+    create (data) {
         // former: function birdhouse_DIARY(data) {}
         this.setVariables(data);
 

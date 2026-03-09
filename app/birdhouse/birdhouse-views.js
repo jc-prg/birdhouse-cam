@@ -828,14 +828,14 @@ function birdhouse_LIST_chart_weather(data, active_page, camera) {
                                       size="", set_colors=[],
                                       set_menu="right"
                                       );
-    chart    += birdhouseWeather_OverviewChart(weather_data); // + "<br/>";
+    chart    += bhWeather.overviewChart(weather_data); // + "<br/>";
 
     if (chartJS_loaded) {
         chart += "<br/>&nbsp;";
         html  += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, false );
         }
     else {
-        var chart = birdhouseWeather_OverviewChart(weather_data);
+        var chart = bhWeather.overviewChart(weather_data);
         chart += "<br/>&nbsp;";
         html  += birdhouse_OtherGroup( "chart", lang("WEATHER") + " " + lang("NO_INTERNET_CHART"), chart, false );
         }
