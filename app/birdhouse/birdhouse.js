@@ -369,10 +369,10 @@ function birdhousePrint(data) {
     if (app_pages_lists.includes(app_active.page))           { birdhouse_LIST(app_active.page, data, app_active.cam); }
     else if (app_pages_settings.includes(app_active.page))   { bhSettings.create_page(app_active.page, data); }
 	else if (app_active.page === "INDEX")                    { birdhouse_INDEX(data, app_active.cam); }
-	else if (app_active.page === "DIARY")                    { bhDiary.init(data); }
+	else if (app_active.page === "DIARY")                    { bhDiary.create(data); }
     else if (app_active.page === "OBJECTS")                  { bhObjects.create(data); }
 	else if (app_active.page === "VIDEO_DETAIL")	         { birdhouse_VIDEO_DETAIL(data); }
-	else if (app_active.page === "WEATHER")                  { birdhouse_WEATHER(data); }
+	else if (app_active.page === "WEATHER")                  { bhWeather.create(data); }
 	else                                                     { birdhousePrint_page("INDEX"); success = false; }
 
 	if (success === false)   { app_active.page = app_last_active_page; }

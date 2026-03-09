@@ -26,7 +26,7 @@ class BirdhouseWeather {
             setTextById(app_frame.content, "&nbsp;<br/><center>" + lang("NO_WEATHER_CHANGE_SETTINGS") + "</center><br/>&nbsp;");
             return;
         }
-        if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"] || weather["info_status"]["running"] == "error") {
+        if (!weather["forecast"] || !weather["current"] || !weather["forecast"]["today"] || weather["info_status"]["running"] === "error") {
             setTextById(app_frame.content, "&nbsp;<br/><center><font color='red'><b>" + lang("WEATHER_DATA_ERROR") + "</b></font></center><br/>&nbsp;");
             console.warn("Error with weather data!")
             console.warn(weather);
