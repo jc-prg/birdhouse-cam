@@ -300,7 +300,5 @@ class BirdhouseObjects {
 }
 
 
-const bhObjects = new BirdhouseObjects("bhObjects");
-
-
+let bhObjects;
 app_scripts_loaded += 1;

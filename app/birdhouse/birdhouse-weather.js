@@ -224,8 +224,5 @@ class BirdhouseWeather {
     }
 }
 
-
-const bhWeather = new BirdhouseWeather("bhWeather");
-
-
+let bhWeather;
 app_scripts_loaded += 1;

@@ -112,11 +112,23 @@ var birdhouse_css = [
 * check, if all required JavaScript modules have been loaded
 */
 function birdhouse_modules_loaded() {
-    if (app_scripts_loaded == birdhouse_js.length)  { return true; }
-    else                                            { return false; }
+    return app_scripts_loaded === birdhouse_js.length;
 }
 
 //setTimeout(function(){ appApiLogging = "error_log2"; elementVisible("error_log2"); }, 2000);
+
+
+/*
+* initial load: load birdhouse classes
+*/
+function birdhouseInitialLoad() {
+
+    bhDiary = new BirdhouseDiary("bhDiary");
+    bhObjects = new BirdhouseObjects("bhObjects");
+    bhSettings = new BirdhouseAppSettings("bhSettings");
+    bhViews = new BirdhouseViews("bhViews");
+    bhWeather = new BirdhouseWeather("bhWeather");
+}
 
 /*
 * load a specific page or view, uses existing parameter or vars app_active.cam and app_active.date
@@ -129,7 +141,7 @@ function birdhouse_modules_loaded() {
 */
 function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
 
-    var page_history = false;
+    let page_history = false;
 
     // scroll to the top
 	window.scrollTo(0,0);
@@ -138,10 +150,10 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     console.log("                   from: " + app_active.page + " / " + app_active.cam + " / " + app_active.date);
 
     // set app_active values
-    if (page == "") { page = app_active.page; }
+    if (page === "") { page = app_active.page; }
     if (!app_pages_other.includes(page)) {
-        if (page != "")              { app_active.page = page; }
-        if (date != "")              { app_active.date = date; }
+        if (page !== "")             { app_active.page = page; }
+        if (date !== "")             { app_active.date = date; }
         if (cam.indexOf("cam") >= 0) { app_active.cam  = cam; }
         }
 
@@ -173,9 +185,9 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
 
         console.log("--> history page: " + page + "|" + cam + "|" + app_active_history_pos + " ("+app_active_history.length+")");
         }
-    else if (app_active_history_pos != 0) {
-        var temp_history = [];
-        for (var i=app_active_history_pos;i<app_active_history.length;i++) {
+    else if (app_active_history_pos !== 0) {
+        let temp_history = [];
+        for (let i=app_active_history_pos;i<app_active_history.length;i++) {
             temp_history.push(app_active_history[i]);
             }
         app_active_history = temp_history;
@@ -191,9 +203,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         console.log("Load content page: " + page + " / " + cam + " / " + date + " / " + label);
         bhSettings.toggle(true);
         appSettings.hide();
-        //app_active.page = page;
-        //birdhousePrint_load(view=app_active.page, camera=app_active.cam, date=app_active.date, label=label, page_call=true);
-        birdhousePrint_load(view=page, camera=cam, date=date, label=label, page_call=true);
+        birdhousePrint_load(page, cam, date, label, true);
         }
 
     // load setting pages
@@ -201,16 +211,16 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
 
         console.log("Load settings page: " + page);
         app_active = { page: page, cam: app_active.cam, date: "" };
-        if (page != "SETTINGS") { appSettings.create(page); }
-        else                    { appSettings.create(); }
+        if (page !== "SETTINGS") { appSettings.create(page); }
+        else                     { appSettings.create(); }
         appSettings.clear_content_frames();
         }
 
     // load other pages such as LOGIN and LOGOUT
     else if (app_pages_other.includes(page)) {
         console.log("Load other page: " + page);
-        if (page == "LOGIN") {
-            if (cam == "")                  { page = "INDEX"; }
+        if (page === "LOGIN") {
+            if (cam === "")                  { page = "INDEX"; }
             else                            { page = cam; }
             if (page.indexOf("cam") >= 0)   { app_active.cam = page; }
 
@@ -220,7 +230,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
 
             birdhouse_loginDialog(cam);
             }
-        else if (page == "LOGOUT") {
+        else if (page === "LOGOUT") {
             if (app_pages_admin.includes(app_active.page)) { app_active.page = "INDEX"; }
             birdhouse_logout();
             }
@@ -229,7 +239,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
     // load last page (as page not known)
     else {
         console.warn("birdhousePrint_page: requested page '" + page + "' not found.");
-        birdhousePrint_load(page="INDEX", camera="", date="", label="", page_call=false);
+        birdhousePrint_load("INDEX", "", "", "", false);
         }
 
     this.compare = function (obj1, obj2) {
@@ -241,7 +251,7 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
         console.log("--> add page to history: " + app_active.page + "|" + app_active.cam + "|" + app_active.date);
 
         var state_copy       = { ...app_active };
-        if (app_active_history.length == 0 || !this.compare(state_copy, app_active_history[0])) {
+        if (app_active_history.length === 0 || !this.compare(state_copy, app_active_history[0])) {
             app_active_history.unshift(state_copy);
             }
         if (app_active_history.length > app_active_history_max) { app_active_history.pop(); }
@@ -259,16 +269,20 @@ function birdhousePrint_page(page="INDEX", cam="", date="", label="") {
 * @param (string) label: selected label, e.g., detected object
 */
 function birdhousePrint_load(view="INDEX", camera="", date="", label="", page_call=false) {
-    var login_timeout = 3000;
+    let login_timeout = 3000;
 
 	if (app_first_load || app_2nd_load) {
-	    if (app_first_load) { app_first_load = false; }
-	    else                { app_2nd_load = false; }
+	    if (app_first_load) {
+            birdhouseInitialLoad();
+            app_first_load = false;
+        }
+        else {
+            app_2nd_load = false;
+        }
 
         // if parameters given in the URL try to load pages directly (and login, if settings)
-	    if (window.location.href.indexOf("?") > 0 && page_call == false) {
-	        params = getUrlParams(window.location.href);
-
+	    if (window.location.href.indexOf("?") > 0 && page_call === false) {
+	        let params = getUrlParams(window.location.href);
 	        if (params["page"] && (app_pages_content.includes(params["page"].toUpperCase()) || app_pages_settings.includes(params["page"].toUpperCase()))) {
 	            page = params["page"].toUpperCase();
 
@@ -303,8 +317,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="", page_ca
 	        }
 
         // if initial start load login and settings
-        var initial = app_data["STATUS"]["server"]["initial_setup"];
-        if (initial) {
+        if (app_data["STATUS"]["server"]["initial_setup"]) {
             setTimeout(function() {
                 birdhousePrint_page("LOGIN", "SETTINGS_SERVER");
                 }, login_timeout);
@@ -366,14 +379,14 @@ function birdhousePrint(data) {
 	console.log("---> birdhousePrint: "+app_active.page+" / "+app_active.cam+" / "+app_active.date);
 
     // load selected view
-    if (app_pages_lists.includes(app_active.page))           { birdhouse_LIST(app_active.page, data, app_active.cam); }
-    else if (app_pages_settings.includes(app_active.page))   { bhSettings.create_page(app_active.page, data); }
-	else if (app_active.page === "INDEX")                    { birdhouse_INDEX(data, app_active.cam); }
-	else if (app_active.page === "DIARY")                    { bhDiary.create(data); }
+    if (app_pages_settings.includes(app_active.page))        { bhSettings.create_page(app_active.page, data); }
+    else if (app_pages_lists.includes(app_active.page))      { bhViews.create(data, app_active.page, app_active.cam); }
+	else if (app_active.page === "INDEX")                    { bhViews.create(data, app_active.page, app_active.cam); }
+    else if (app_active.page === "VIDEO_DETAIL")	         { bhViews.create(data, app_active.page); }
     else if (app_active.page === "OBJECTS")                  { bhObjects.create(data); }
-	else if (app_active.page === "VIDEO_DETAIL")	         { birdhouse_VIDEO_DETAIL(data); }
-	else if (app_active.page === "WEATHER")                  { bhWeather.create(data); }
-	else                                                     { birdhousePrint_page("INDEX"); success = false; }
+    else if (app_active.page === "WEATHER")                  { bhWeather.create(data); }
+    else if (app_active.page === "DIARY")                    { bhDiary.create(data); }
+    else                                                     { birdhousePrint_page("INDEX"); success = false; }
 
 	if (success === false)   { app_active.page = app_last_active_page; }
 	else                     { app_last_active_page = app_active.page; }

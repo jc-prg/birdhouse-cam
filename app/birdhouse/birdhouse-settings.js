@@ -2,7 +2,6 @@
 // jc://birdhouse/settings
 //--------------------------------------
 
-let app_settings_active = false;
 
 
 /*
@@ -989,7 +988,6 @@ class BirdhouseAppSettings {
 }
 
 
-const bhSettings = new BirdhouseAppSettings("bhSettings");
-
-
+let bhSettings;
+let app_settings_active = false;
 app_scripts_loaded += 1;

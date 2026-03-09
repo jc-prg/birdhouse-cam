@@ -578,6 +578,7 @@ class BirdhouseDiary {
 }
 
 
+let bhDiary;
 const sample_dataset = {
     "info": {},
     "broods": {
@@ -619,7 +620,4 @@ const sample_dataset = {
         }
     }
 };
-const bhDiary = new BirdhouseDiary("bhDiary");
-
-
 app_scripts_loaded += 1;
