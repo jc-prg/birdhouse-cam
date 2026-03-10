@@ -23,7 +23,7 @@ function birdhouse_KillActiveStreams() {
             }
         }
     // stop every resource loading on the current page
-    if (!app_floating_lowres) { window.stop(); }
+    if (!bhFloating.app_floating_lowres) { window.stop(); }
     }
 
 /*

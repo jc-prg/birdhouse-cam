@@ -122,6 +122,7 @@ function birdhouseModulesLoaded() {
 function birdhouseInitialLoad() {
 
     bhDiary = new BirdhouseDiary("bhDiary");
+    bhFloating = new BirdhouseFloatingLowRes("bhFloating");
     bhObjects = new BirdhouseObjects("bhObjects");
     bhSettings = new BirdhouseAppSettings("bhSettings");
     bhViews = new BirdhouseViews("bhViews");
@@ -548,11 +549,10 @@ function birdhouseSwitchCam() {
     setTextById("selected_cam", app_active.cam);
 	birdhousePrint_page(page=app_active.page, cam=app_available.cameras[next_cam], date=app_active.date);
 
-	if (app_floating_lowres) {
+	if (this.app_floating_lowres) {
  	    setTimeout(function(){
-            startFloatingLowres(app_active.cam);
-            //repositionFloatingLowres();
-            }, 1000);
+             bhFloating.start(app_active.cam);
+             }, 1000);
 	    }
 }
 
@@ -569,8 +569,8 @@ function birdhouseReloadView() {
 
     console.log("RELOAD -> " + app_active.page);
 
-	if (app_floating_lowres) {
-	    startFloatingLowres(app_floating_cam, app_floating_stream);
+	if (bhFloating.app_floating_lowres) {
+	    bhFloating.start(this.app_floating_cam, this.app_floating_stream);
 	    }
 
 	if (!no_reload_views.includes(app_active.page)) {

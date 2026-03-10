@@ -42,7 +42,7 @@ class BirdhouseNavigation {
                         <div class="nav-bar" id="nav-bar-1">
                             <div class="controls">
 
-                                <span id="stream" onclick="toggleFloatingLowRes();" class="nav-on">
+                                <span id="stream" onclick="bhFloating.toggle();" class="nav-on">
                                     <img id="streamToggle" src="birdhouse/img/camera.png" class="nav-img" title="`+lang('SHOW_STREAM')+`" alt="">
                                     <img id="streamToggle_black" src="birdhouse/img/camera_black.png" class="nav-img" title="show stream" style="display:none;" alt="">
                                 </span>
@@ -68,14 +68,14 @@ class BirdhouseNavigation {
 
         this.navBar2 = document.getElementById('nav-bar-2');
         this.navBar2.addEventListener('mouseenter', () => {
-            navBar1.classList.add('expanded');
-            navBar2.innerHTML = this.img_minus;
+            this.navBar1.classList.add('expanded');
+            this.navBar2.innerHTML = this.img_minus;
         });
 
         this.navBar1 = document.getElementById('nav-bar-1');
         this.navBar1.addEventListener('mouseleave', () => {
-            navBar1.classList.remove('expanded');
-            navBar2.innerHTML = this.img_plus;
+            this.navBar1.classList.remove('expanded');
+            this.navBar2.innerHTML = this.img_plus;
         });
 
     }

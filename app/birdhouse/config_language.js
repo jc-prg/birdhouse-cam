@@ -1,5 +1,5 @@
 //--------------------------------------
-// jc://app-framework/, (c) Christoph Kloth
+// jc://birdhouse/language-support/
 //--------------------------------------
 // multi-language support (implementation just started)
 //--------------------------------------
