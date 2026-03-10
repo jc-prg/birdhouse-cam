@@ -101,7 +101,7 @@ index_template["single"] = `
                 </a>
 
                 <div class="fullscreen-button-container">
-                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
+                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="bhOverlay.fullscreen('stream_<!--CAM1_ID-->');">
                        <svg>
                           <use id="fs_show" href="#fullscreen"></use>
                           <use id="fs_hide" href="#fullscreen-exit" class="hidden"></use>
@@ -126,7 +126,7 @@ index_template["single_admin"] = `
                 </a>
 
                 <div class="fullscreen-button-container">
-                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
+                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="bhOverlay.fullscreen('stream_<!--CAM1_ID-->');">
                        <svg>
                           <use id="fs_show" href="#fullscreen"></use>
                           <use id="fs_hide" href="#fullscreen-exit" class="hidden"></use>
@@ -245,7 +245,7 @@ index_template["overlay"] = `
                 </a>
 
                 <div class="fullscreen-button-container <!--CAM2_LOWRES_POS-->">
-                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
+                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="bhOverlay.fullscreen('stream_<!--CAM1_ID-->');">
                        <svg>
                           <use id="fs_show" href="#fullscreen"></use>
                           <use id="fs_hide" href="#fullscreen-exit" class="hidden"></use>
@@ -275,7 +275,7 @@ index_template["overlay_admin"] = `
                 </a>
 
                 <div class="fullscreen-button-container <!--CAM2_LOWRES_POS-->">
-                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="birdhouse_imageFullscreenToggle('stream_<!--CAM1_ID-->');">
+                    <button data-title="Full screen (f)" class="fullscreen-button" id="fullscreen-button-index" onclick="bhOverlay.fullscreen('stream_<!--CAM1_ID-->');">
                        <svg>
                           <use id="fs_show" href="#fullscreen"></use>
                           <use id="fs_hide" href="#fullscreen-exit" class="hidden"></use>

@@ -324,7 +324,8 @@ class BirdhouseViews {
 
                 for (let key in entries_favorite) { overloadImageEntries[key] = entries_favorite[key]; }
             }
-            birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active.page, app_admin_allowed);
+            bhOverlay.load_list(overloadImageKeys, overloadImageEntries, app_active.page, app_admin_allowed);
+            //birdhouse_overlayLoadImages(overloadImageKeys, overloadImageEntries, app_active.page, app_admin_allowed);
         }
 
         // list today complete, favorites -> list in monthly or hourly groups
@@ -569,7 +570,7 @@ class BirdhouseViews {
             if (app_admin_allowed) {
                 html += this.tab.row("&nbsp;");
                 html += this.tab.row(lang("EDIT_VIDEO_2") + ":",
-                    "<button onclick=\"birdhouse_videoOverlayToggle();this.blur();\" class=\"button-video-edit\">&nbsp;" + lang("SHORTEN_VIDEO") + "&nbsp;</button>&nbsp;"
+                    "<button onclick=\"bhOverlay.video_toggle();this.blur();\" class=\"button-video-edit\">&nbsp;" + lang("SHORTEN_VIDEO") + "&nbsp;</button>&nbsp;"
                 );
                 if (thumbnail || short) {
                     let delete_buttons = "";

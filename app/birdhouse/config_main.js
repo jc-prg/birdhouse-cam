@@ -217,7 +217,7 @@ function app_connection_lost(error=false) {
             elementVisible("lowres_floating_error", "flex");
             elementHidden("lowres_floating");
             birdhouseStatus_connectionError();
-            birdhouse_exitFullscreen();
+            bhOverlay.fullscreen_exit();
         }
         else {
             app_connection_error = false;

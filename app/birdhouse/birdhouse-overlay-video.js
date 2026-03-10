@@ -6,7 +6,7 @@
 /*
 * create a "floating lowres" that can be activated in each part of the app using the BirdhouseNavigation
 */
-class BirdhouseFloatingLowRes {
+class BirdhouseFloatingVideo {
     constructor(name) {
         this.name = name;
 

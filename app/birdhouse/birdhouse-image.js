@@ -673,7 +673,8 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
     		image_data["description"] = onclick_difference;
             }
 
-        image_data["onclick"]      = "birdhouse_overlayShowById(\"" + entry_id + "\");";
+        //image_data["onclick"]      = "birdhouse_overlayShowById(\"" + entry_id + "\");";
+        image_data["onclick"]      = "bhOverlay.show_by_id(\"" + entry_id + "\");";
         image_data["description"] += image_data["detect_sign"];
         if (image_data["hires_max"]) {
             image_data["description"] = "<b>"+lang("FOTO")+"</b>: " + image_data["description"];
@@ -806,7 +807,7 @@ function birdhouse_ImageDisplayData(title, entry_id, entry, active_page="", admi
 		if (title.indexOf("_") > 0)                 { image_data["description"] = entry["date"] + "[br/]" + image_title; }
 		else                                        { image_data["description"] = title + "[br/]" + image_title; }
 
-		image_data["onclick"]     = "birdhouse_videoOverlay(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
+		image_data["onclick"]     = "bhOverlay.video(\""+image_data["hires"]+"\",\""+image_data["description"]+"\");";
 		image_data["play_button"] = "<img src=\"birdhouse/img/play.png\" class=\"play_button\" style=\"min-width:auto;min-height:auto;\" onclick='"+image_data["onclick"]+"' />";
 		entry["lowres"]           = image_file;
 

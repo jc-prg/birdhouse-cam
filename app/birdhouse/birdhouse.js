@@ -65,14 +65,14 @@ const birdhouse_js = [
     "birdhouse-downloads.js",
     "birdhouse-functions.js",
     "birdhouse-image.js",
-    "birdhouse-image-overlay.js",
     "birdhouse-objects.js",
     "birdhouse-settings.js",
     "birdhouse-statistics.js",
     "birdhouse-status.js",
     "birdhouse-views.js",
     "birdhouse-views-index.js",
-    "birdhouse-views-overlay.js",
+    "birdhouse-overlay-image.js",
+    "birdhouse-overlay-video.js",
     "birdhouse-weather.js",
     "birdhouse-diary.js",
     "birdhouse-navigation.js",
@@ -122,8 +122,9 @@ function birdhouseModulesLoaded() {
 function birdhouseInitialLoad() {
 
     bhDiary = new BirdhouseDiary("bhDiary");
-    bhFloating = new BirdhouseFloatingLowRes("bhFloating");
+    bhFloating = new BirdhouseFloatingVideo("bhFloating");
     bhObjects = new BirdhouseObjects("bhObjects");
+    bhOverlay = new BirdhouseOverlayImage("bhOverlay");
     bhSettings = new BirdhouseAppSettings("bhSettings");
     bhViews = new BirdhouseViews("bhViews");
     bhWeather = new BirdhouseWeather("bhWeather");
@@ -562,7 +563,7 @@ function birdhouseSwitchCam() {
 function birdhouseReloadView() {
 	console.log("----> birdhouseReloadView: "+app_active.page+"/"+app_active.cam+"/"+app_active.date);
 	app_recycle_range = {};
-	birdhouse_overlayHide();
+    bhOverlay.hide();
 	setTextById("headerRight", birdhouseHeaderFunctions() );
 
 	var no_reload_views = ["INDEX", "SETTINGS_IMAGE", "SETTINGS_DEVICES"];
