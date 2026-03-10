@@ -2,7 +2,10 @@
 // jc://birdhouse/views/
 //--------------------------------------
 
-
+/*
+* create index view with video streams and list views with thumbnails
+* as well as the video detail view for video editing (admin mode)
+*/
 class BirdhouseViews {
     constructor(name) {
         this.name = name;
@@ -644,7 +647,6 @@ class BirdhouseViews {
             this.admin_video_player();
         }
     }
-
 
     /*
     * create admin functionalities for the archive view of a specific day

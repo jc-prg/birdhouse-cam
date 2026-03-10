@@ -3,7 +3,6 @@
 //--------------------------------------
 
 
-
 /*
 * class to create several views for settings and information
 */
@@ -59,7 +58,7 @@ class BirdhouseAppSettings {
         if (page === "SETTINGS_CAMERAS")           { birdhouseDevices(lang(page), data, "settings", "cameras"); }
         else if (page === "SETTINGS_DEVICES")      { birdhouseDevices(lang(page), data, "settings", "devices"); }
         else if (page === "SETTINGS_IMAGE")        { birdhouseDevices_cameraSettings(data); }
-        else if (page === "SETTINGS_STATISTICS")   { birdhouse_STATISTICS(data); }
+        else if (page === "SETTINGS_STATISTICS")   { bhStatistics.create(data); }
     }
 
     /*

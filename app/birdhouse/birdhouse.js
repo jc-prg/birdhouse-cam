@@ -125,10 +125,13 @@ function birdhouseInitialLoad() {
     bhFloating = new BirdhouseFloatingVideo("bhFloating");
     bhObjects = new BirdhouseObjects("bhObjects");
     bhOverlay = new BirdhouseOverlayImage("bhOverlay");
+    bhStatistics = new BirdhouseStatistics("bhStatistics");
     bhSettings = new BirdhouseAppSettings("bhSettings");
     bhViews = new BirdhouseViews("bhViews");
     bhWeather = new BirdhouseWeather("bhWeather");
     bhNavigation = new BirdhouseNavigation("bhNavigation");
+
+    bhSettings.init();
     bhNavigation.load();
 }
 

@@ -5,7 +5,7 @@
 
 /*
 * create a navigation module in the lower right corner to navigate back and forth,
-* and to get a quick access to the video stream
+* and to get quick access to the video stream
 */
 class BirdhouseNavigation {
     constructor(name) {
