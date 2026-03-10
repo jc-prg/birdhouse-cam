@@ -3,6 +3,9 @@
 //--------------------------------------
 
 
+/*
+* create statistics view for settings
+*/
 class BirdhouseStatistics {
     constructor(name) {
         this.name = name;
@@ -191,7 +194,6 @@ class BirdhouseStatistics {
         else        { html  += chart; }
         return html;
     }
-
 }
 
 
