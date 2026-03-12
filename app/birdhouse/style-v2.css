@@ -15,7 +15,28 @@ h1        { margin : 4px; }
 h2        { margin : 4px; }
 h3        { margin : 4px; }
 
-body      { background: var(--app-background); }
+
+html {
+    background: var(--app-background);
+}
+
+body {
+    margin: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.header {
+    z-index: 300;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+    background: var(--app-background);
+    width: 100%;
+    height: 50px;
+    position: fixed;
+    top: -50px;
+    opacity: 0.1;
+}
+
 /* body   { touch-action: none; } */
 
 #remote_nav { height: 100vh; }
@@ -27,7 +48,6 @@ body      { background: var(--app-background); }
 #statusLED              { z-index: 102; }
 #statusLEDload          { z-index: 103; }
 #headerRightToolTip     { z-index: 104; }
-
 
 .loading_overlay {
     position        : absolute;
