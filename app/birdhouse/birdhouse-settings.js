@@ -36,7 +36,7 @@ class BirdhouseAppSettings {
         this.init();
         this.setting_type = type;
         app_active.page = type;
-        birdhouse_genericApiRequest("GET", ["status"], birdhouseStatus_print);
+        birdhouse_genericApiRequest("GET", ["status"], bhStatus.print);
         if (app_data["STATUS"]["server"]["initial_setup"]) {
             html = "<center><br/>&nbsp;&nbsp;<br/><img src='"+app_loading_image+"' width='250' alt=''><br/>&nbsp;<br/>"+lang("PLEASE_WAIT")+"<br/>&nbsp;&nbsp;<br/>&nbsp;&nbsp;<br/></center>";
             setTextById(app_frame.content, html);
@@ -547,8 +547,8 @@ class BirdhouseAppSettings {
             let webdav_url = window.location.href.split("//")[1].split("/")[0].split(":")[0];
             let running;
 
-            if (settings["webdav"]["active"])   { running = "<font color=" + header_color_ok + ">[" + lang("ACTIVE") + "]</font>"; }
-            else                                { running = "<font color=" + header_color_error + ">[" + lang("INACTIVE") + "]</font>"; }
+            if (settings["webdav"]["active"])   { running = "<font color=" + bhStatus.header_color_ok + ">[" + lang("ACTIVE") + "]</font>"; }
+            else                                { running = "<font color=" + bhStatus.header_color_error + ">[" + lang("INACTIVE") + "]</font>"; }
 
             let webdav_url_1    = "dav://" + settings["webdav"]["user"] + ":" + settings["webdav"]["pwd"] + "@" + webdav_url + ":" + settings["webdav"]["port"] + "/";
             let webdav_url_2    = "dav://" + webdav_url + ":" + settings["webdav"]["port"] + "/";
@@ -729,7 +729,7 @@ class BirdhouseAppSettings {
         if (detection_active === true || detection_active === "true") {
             let loading_info = status["object_detection"]["status"] + " - " + status["object_detection"]["status_details"];
             if (status["object_detection"]["status"] === true)   { loading_info += " - " + JSON.stringify(status["object_detection"]["models_loaded"]).replaceAll(",", ", ").replaceAll(":", " : "); }
-            else                                                 { loading_info = "<font color=" + header_color_error + ">" + loading_info + "</font>"; }
+            else                                                 { loading_info = "<font color=" + bhStatus.header_color_error + ">" + loading_info + "</font>"; }
             html_internal += this.tab.row("Object detection loaded:&nbsp;", loading_info);
             }
 

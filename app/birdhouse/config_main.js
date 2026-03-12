@@ -149,7 +149,7 @@ function app_status(data) {
             }
         if (status["background_process"] === true)	{ setTextById("statusLED","<div id='blue'></div>"); }
         else 					                	{ setTextById("statusLED","<div id='green'></div>"); }
-        birdhouseStatus_print(data);
+        bhStatus.print(data);
         }
 
     birdhouseSetMainVars(data);
@@ -216,7 +216,7 @@ function app_connection_lost(error=false) {
             elementHidden("lowres_today");
             elementVisible("lowres_floating_error", "flex");
             elementHidden("lowres_floating");
-            birdhouseStatus_connectionError();
+            bhStatus.connectionError();
             bhOverlay.fullscreen_exit();
         }
         else {

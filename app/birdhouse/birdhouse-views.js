@@ -2,6 +2,7 @@
 // jc://birdhouse/views/
 //--------------------------------------
 
+
 /*
 * create index view with video streams and list views with thumbnails
 * as well as the video detail view for video editing (admin mode)
@@ -212,9 +213,9 @@ class BirdhouseViews {
     */
     create_list (page, data, camera, header_open=true) {
 
-        if (page === "FAVORITES" && birdhouseStatus_loadingViews(app_data, "favorite") !== "done") { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
-        if (page === "ARCHIVE"   && birdhouseStatus_loadingViews(app_data, "archive") !== "done")  { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
-        if (page === "OBJECTS"   && birdhouseStatus_loadingViews(app_data, "object") !== "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+        if (page === "FAVORITES" && bhStatus.loadingViews(app_data, "favorite") !== "done") { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+        if (page === "ARCHIVE"   && bhStatus.loadingViews(app_data, "archive") !== "done")  { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
+        if (page === "OBJECTS"   && bhStatus.loadingViews(app_data, "object") !== "done")   { appMsg.alert(lang("DATA_LOADING_TRY_AGAIN")); return false; }
 
         let html = "";
         let title = lang(page);

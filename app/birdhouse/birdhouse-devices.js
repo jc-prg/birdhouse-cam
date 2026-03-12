@@ -67,7 +67,7 @@ function birdhouseDevices(title, data, show="settings", subset="all") {
 
 
 /*
-* Create status view for all configured devices - to be filled and updated by birdhouseStatus_print();
+* Create status view for all configured devices - to be filled and updated by bhStatus.print();
 *
 * @param (dict) index: device definition
 * @param (boolean) show_button: show link to open respective group with details
