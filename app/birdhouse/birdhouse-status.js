@@ -676,7 +676,7 @@ class BirdhouseStatus {
                 }
 
                 if (sensors[sensor]["active"]) {
-                    setStatusColor("status_active_"+sensor, "white");
+                    this.setStatusColor("status_active_"+sensor, "white");
                     let entry = "";
                     if (typeof(sensors[sensor]["values"]["temperature"]) != "undefined" && sensors[sensor]["values"]["temperature"] != null) {
                         entry += sensors[sensor]["name"] + ": ";
