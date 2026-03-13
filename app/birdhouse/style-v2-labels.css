@@ -4,7 +4,7 @@
 
 :root {
     --label-download: darkred;
-    --label-download-text: darkred;
+    --label-download-text: white;
     --label-download-glow: #333;
     --label-download-hover: #700;
 

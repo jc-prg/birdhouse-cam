@@ -493,11 +493,11 @@ class BirdhouseViews {
     }
 
     /*
-* create view for video editing (detail for video view)
-*
-* @param (string) title: title to be displayed
-* @param (dict) data: API response for video specific request
-*/
+    * create view for video editing (detail for video view)
+    *
+    * @param (string) title: title to be displayed
+    * @param (dict) data: API response for video specific request
+    */
     create_video (data) {
 
         let html = "";
@@ -638,10 +638,10 @@ class BirdhouseViews {
 
         if (video_exists) {
             if (analysis) {
-                let chart_video = birdhouseChart_create("", analysis["video"]["titles"], analysis["video"]["data"], "line", true, "video_chart", "", [], "right");
+                let chart_video = bhCharts.create("", analysis["video"]["titles"], analysis["video"]["data"], "line", true, "video_chart", "", [], "right");
                 if (analysis !== {}) { setTextById("video_analysis", chart_video); }
 
-                let chart_audio = birdhouseChart_create("", analysis["audio"]["titles"], analysis["audio"]["data"], "line", true, "audio_chart", "", [], "right");
+                let chart_audio = bhCharts.create("", analysis["audio"]["titles"], analysis["audio"]["data"], "line", true, "audio_chart", "", [], "right");
                 if (analysis !== {}) { setTextById("audio_analysis", chart_audio); }
             }
 
@@ -1003,11 +1003,11 @@ class BirdhouseViews {
             title_s = title_s.replace("&ouml;", "ö");
             chart_titles.push(title_s);
         }
-        let chart = birdhouseChart_create("", chart_titles, chart_data["data"], "line",
+        let chart = bhCharts.create("", chart_titles, chart_data["data"], "line",
             true, "weather_chart", "", [], "right");
         chart    += bhWeather.overviewChart(weather_data); // + "<br/>";
 
-        if (chartJS_loaded) {
+        if (bhCharts.loaded) {
             chart += "<br/>&nbsp;";
             html  += birdhouse_OtherGroup( "chart", lang("WEATHER"), chart, false );
         }

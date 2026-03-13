@@ -131,9 +131,8 @@ class BirdhouseStatistics {
             pie_data["titles"].push("Available");
             pie_data["data"].push(system_data["hdd_total"] - system_data["hdd_used"]);
 
-            let chart = birdhouseChart_create("HDD Usage", pie_data["titles"], pie_data["data"], "pie",
-                false, "hdd_pie_"+id, {"height": "270px", "width":"270px"},
-                chartJS_hddPieChart,
+            let chart = bhCharts.create("HDD Usage", pie_data["titles"], pie_data["data"], "pie",
+                false, "hdd_pie_"+id, {"height": "270px", "width":"270px"}, bhCharts.hddPieChart,
                 "right");
 
             let info  = "";
@@ -180,13 +179,13 @@ class BirdhouseStatistics {
         let chart = "&nbsp;<br/>";
         const statistics = data["DATA"]["data"]["entries"][date];
 
-        chart += birdhouseChart_create("", statistics[key]["titles"],
+        chart += bhCharts.create("", statistics[key]["titles"],
             statistics[key]["data"],
             "line",
             false,
             "statisticsChart_"+key+"_"+chart_id,
             {"height": "250px", "width": "100%"},
-            chartJS_darkColors
+            bhCharts.darkColors
         );
         chart += "<br/>&nbsp;<br/>";
 

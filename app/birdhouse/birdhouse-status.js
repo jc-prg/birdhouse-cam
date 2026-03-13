@@ -1199,4 +1199,5 @@ Object.entries(bhStatusMap).forEach(([oldName, newName]) => {
 });
 */
 
+let bhStatus;
 app_scripts_loaded += 1;

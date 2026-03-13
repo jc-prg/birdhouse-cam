@@ -121,13 +121,14 @@ function birdhouseModulesLoaded() {
 */
 function birdhouseInitialLoad() {
 
+    bhCharts = new BirdhouseCharts("bhCharts");
     bhDiary = new BirdhouseDiary("bhDiary");
     bhFloating = new BirdhouseFloatingVideo("bhFloating");
     bhObjects = new BirdhouseObjects("bhObjects");
     bhOverlay = new BirdhouseOverlayImage("bhOverlay");
     bhSettings = new BirdhouseAppSettings("bhSettings");
     bhStatistics = new BirdhouseStatistics("bhStatistics");
-    const bhStatus = new BirdhouseStatus("bhStatus");
+    bhStatus = new BirdhouseStatus("bhStatus");
     bhViews = new BirdhouseViews("bhViews");
     bhWeather = new BirdhouseWeather("bhWeather");
     bhNavigation = new BirdhouseNavigation("bhNavigation");
@@ -331,7 +332,7 @@ function birdhousePrint_load(view="INDEX", camera="", date="", label="", page_ca
             return;
             }
 
-        birdhouse_loadChartJS();
+        bhCharts.load_ChartJS();
 	    birdhouse_birdNamesRequest();
 	    }
 

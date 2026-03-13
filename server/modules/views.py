@@ -2185,7 +2185,8 @@ class BirdhouseViewDiary(BirdhouseClass):
         stage_states = {}
 
         # Sort the entry dates
-        for date in sorted(data["entries"]):
+        keys = list(data["entries"].keys())
+        for date in sorted(keys):
             if date > today:
                 continue  # Future data is irrelevant
 
@@ -2194,10 +2195,10 @@ class BirdhouseViewDiary(BirdhouseClass):
                 if t not in valid_types:
                     continue
 
-                brood = event.get("brood")
+                brood = event.get("brood","NO-ID")
                 value = event.get("value")
 
-                key = (t, brood)
+                key = (brood, t)
 
                 if value == "start":
                     stage_states[key] = {
@@ -2207,41 +2208,56 @@ class BirdhouseViewDiary(BirdhouseClass):
                 elif value in ("end", "cancel") and key in stage_states:
                     stage_states[key]["ended"] = True
 
-        # Find the most recent stage that is currently running
-        active_stage = None
-        for (stage_type, brood), state in stage_states.items():
+                #self.logging.info(date + " " + str(event) + " " + str(key))
 
-            if  active_stage is not None:
+        self.logging.info("1"+str(stage_states))
+        self.logging.info("2"+str(keys))
+
+        # Find the most recent stage that is currently running
+        active_stage = {}
+        for (brood, stage_type), state in stage_states.items():
+            #for (brood, stage_type) in stage_states:
+            #state = stage_states[(brood, stage_type)]
+
+            self.logging.info("3|"+brood+"|"+stage_type+"|"+str(state))
+
+            if brood in active_stage and active_stage[brood] is not None:
                 self.logging.debug("CHECK brood state: " + str(stage_type) + "-" + str(state) +
-                                  " | state > active: " + str(state["start_date"]) + " > " + str(active_stage["start_date"]))
+                                   " | state > active: " + str(state["start_date"]) + " > " + str(active_stage[brood]["start_date"]))
             else:
                 self.logging.debug("CHECK brood state: " + str(stage_type) + "-" + str(state) +
-                                  " | state > active: " + str(state["start_date"]) + " > None")
+                                   " | state > active: " + str(state["start_date"]) + " > None")
 
-            if not state["ended"] and state["start_date"] <= today:
-                if active_stage is None or state["start_date"] > active_stage["start_date"]:
-                    active_stage = {
+            if state["start_date"] <= today:
+                if brood not in active_stage or active_stage[brood] is None or state["start_date"] > active_stage[brood]["start_date"]:
+                    active_stage[brood] = {
                         "type": stage_type,
                         "brood": brood,
-                        "start_date": state["start_date"]
+                        "start_date": state["start_date"],
+                        "ended": state["ended"]
                     }
 
-        if active_stage:
-            start_date_obj = datetime.strptime(active_stage["start_date"], "%Y%m%d")
-            today_date_obj = datetime.strptime(today, "%Y%m%d")
-            days_since_start = (today_date_obj - start_date_obj).days
+        self.logging.info("4|"+str(active_stage))
 
-            if active_stage["brood"] in data["broods"]:
-                brood = data["broods"][active_stage["brood"]]
-            else:
-                brood = {"title": "UNKNOWN", "bird": "BIRD", "comment": ""}
+        for brood_id in active_stage:
+            self.logging.info("5|"+brood+"|"+str(active_stage[brood_id]))
 
-            return {
-                "stage": active_stage["type"],
-                "brood": active_stage["brood"],
-                "brood_details": brood,
-                "days_since_start": days_since_start
-            }
+            if active_stage[brood_id] and not active_stage[brood]["ended"]:
+                start_date_obj = datetime.strptime(active_stage[brood_id]["start_date"], "%Y%m%d")
+                today_date_obj = datetime.strptime(today, "%Y%m%d")
+                days_since_start = (today_date_obj - start_date_obj).days
+
+                if active_stage[brood_id]["brood"] in data["broods"]:
+                    brood = data["broods"][active_stage[brood_id]["brood"]]
+                else:
+                    brood = {"title": "UNKNOWN", "bird": "BIRD", "comment": ""}
+
+                return {
+                    "stage": active_stage[brood_id]["type"],
+                    "brood": active_stage[brood_id]["brood"],
+                    "brood_details": brood,
+                    "days_since_start": days_since_start
+                }
 
         return None  # No stage is currently active
 

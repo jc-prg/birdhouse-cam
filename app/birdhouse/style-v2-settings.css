@@ -79,6 +79,7 @@
 .setting_bg.header {
     position        : fixed;
     width           : calc(100% - 36px);
+    background: unset;
 
     display         : none;
     justify-content : center;

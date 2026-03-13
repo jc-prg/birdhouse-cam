@@ -148,7 +148,7 @@ class BirdhouseWeather {
         //console.error(weather_data);
 
         let chart     = "&nbsp;<br/>";
-        chart        += birdhouseChart_create("", chart_data["titles"],chart_data["data"]);
+        chart        += bhCharts.create("", chart_data["titles"],chart_data["data"]);
         chart        += "<br/>&nbsp;<br/>";
 
         Object.keys(weather_data).forEach(date=>{

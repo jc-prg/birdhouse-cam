@@ -87,6 +87,7 @@ def on_kill(signum, handler):
     Clean exit on kill command
     All shutdown functions are defined in the "finally:" section in the end of this script
     """
+    global srv_logging
     print('\nKILL command detected! (Signal: %s)' % (signum,))
     srv_logging.warning('KILL command detected! (Signal: %s)' % (signum,))
     srv_logging.info("Starting shutdown ...")
@@ -104,7 +105,9 @@ def write_to_error_log(exc_type, message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     timestamp = ("-" * 50) + "\n" + timestamp + f"  -> {exc_type} EXCEPTION:\n" + ("-" * 50)
 
-    with open(rm3presets.log_filename_error, "a", encoding="utf-8") as f:
+    srv_logging.error("Write Exception information to error log: " + birdhouse_error_log_filename)
+
+    with open(birdhouse_error_log_filename, "a", encoding="utf-8") as f:
         f.write(f"{timestamp}\n{message}\n")
 
 
@@ -112,10 +115,17 @@ def on_exception(exc_type, value, trace_back):
     """
     grab all exceptions and write them to the logfile (if active)
     """
-    jsonAppDir = os.path.dirname(os.path.abspath(__file__))
-
     tb_str = ''.join(traceback.format_exception(exc_type, value, trace_back))
-    log.error(f"EXCEPTION:\n\n{tb_str}\n")
+    srv_logging.error("Exception:\n\n" + tb_str + "\n")
+
+
+def on_exception_new(exc_type, value, trace_back):
+    """
+    grab all exceptions and write them to the logfile (if active)
+    """
+    global srv_logging
+    tb_str = ''.join(traceback.format_exception(exc_type, value, trace_back))
+    srv_logging.error(f"EXCEPTION:\n\n{tb_str}\n")
     write_to_error_log("MAIN", tb_str)
 
 
@@ -123,8 +133,9 @@ def on_thread_exception(args):
     """
     send thread exceptions to logging
     """
+    global srv_logging
     tb_str = ''.join(traceback.format_exception(args.exc_type,args.exc_value,args.exc_traceback))
-    log.error(f"EXCEPTION IN THREAD {args.thread.name}:\n\n{tb_str}\n")
+    srv_logging.error(f"EXCEPTION IN THREAD {args.thread.name}:\n\n{tb_str}\n")
     write_to_error_log("THREAD", tb_str)
 
 
@@ -253,6 +264,11 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
+    def handle_error(self, request, client_address):
+        tb = traceback.format_exc()
+        srv_logging.error(f"REQUEST EXCEPTION from {client_address}:\n{tb}")
+        write_to_error_log("REQUEST", tb)
+
 
 class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
     """
@@ -269,6 +285,11 @@ class StreamingServerIPv6(socketserver.ThreadingMixIn, server.HTTPServer):
         """
         self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
         super().server_bind()
+
+    def handle_error(self, request, client_address):
+        tb = traceback.format_exc()
+        srv_logging.error(f"REQUEST EXCEPTION from {client_address}:\n{tb}")
+        write_to_error_log("REQUEST", tb)
 
 
 class StreamingHandler(server.BaseHTTPRequestHandler):

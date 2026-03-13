@@ -30,36 +30,6 @@ class BirdhouseDiary {
         this.image_delete = "";
         this.last_stage_value = "";
 
-        this.stage_values = {
-            "start": lang("START"),
-            "end": lang("END"),
-            "one_day": lang("ONE_DAY"),
-            "termination": lang("TERMINATION"),
-            "1": "1",
-            "2": "2",
-            "3": "3",
-            "4": "4",
-            "5": "5",
-            "6": "6",
-            "7": "7",
-            "8": "8",
-            "9": "9",
-            "10": "10",
-            "11": "11",
-            "12": "12",
-            "13": "13",
-            "14": "14",
-        }
-        this.stage_definition = {
-            "1": lang("NEST_BUILDING"),
-            "2": lang("EGG_LAYING"),
-            "3": lang("BREEDING"),
-            "4": lang("HATCHING"),
-            "5": lang("FEEDING"),
-            "6": lang("LEAVING"),
-            "7": lang("SPECIAL_EVENT")
-        }
-
         this.tab = new birdhouse_table();
     }
 
@@ -117,6 +87,36 @@ class BirdhouseDiary {
                 this.bird_definition[key] = bhObjects.bird_lang(key);
             });
 
+        }
+
+        this.stage_values = {
+            "start": lang("START"),
+            "end": lang("END"),
+            "one_day": lang("ONE_DAY"),
+            "termination": lang("TERMINATION"),
+            "1": "1",
+            "2": "2",
+            "3": "3",
+            "4": "4",
+            "5": "5",
+            "6": "6",
+            "7": "7",
+            "8": "8",
+            "9": "9",
+            "10": "10",
+            "11": "11",
+            "12": "12",
+            "13": "13",
+            "14": "14",
+        }
+        this.stage_definition = {
+            "1": lang("NEST_BUILDING"),
+            "2": lang("EGG_LAYING"),
+            "3": lang("BREEDING"),
+            "4": lang("HATCHING"),
+            "5": lang("FEEDING"),
+            "6": lang("LEAVING"),
+            "7": lang("SPECIAL_EVENT")
         }
 
         this.image_archive       = "<div class='diary-icon diary-archive' title='"+lang("ARCHIVE")+"'></div>";
@@ -350,17 +350,20 @@ class BirdhouseDiary {
     */
     activeBrood() {
         let html    = "";
-        let data    = app_data["STATUS"]["brood"];
-        let details = data["brood_details"];
+        let data = app_data["STATUS"]["brood"];
 
-        this.setVariables();
 
-        if (data["stage"]) {
+        if (data && data["stage"] && data["brood_details"]) {
+
+            this.setVariables();
+            let details = data["brood_details"];
+
             html += "<center><div class='brood-info'>";
             html += "<text class='milestone type-edit' onclick='birdhousePrint_page(\"DIARY\");' style='float:none; display:inline-block;height:15px;width:15px;'>" + this.image_info + "</text>";
             html += "&nbsp;";
             if (data["days_since_start"] === 0) {
                 html += lang("ACTIVE_BROOD_TODAY", [bhObjects.bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);
+                console.error(data["stage"]);
             }
             else if (data["days_since_start"] === 1) {
                 html += lang("ACTIVE_BROOD_1DAY", [bhObjects.bird_lang(details["bird"]), this.stage_definition[data["stage"]], data["days_since_start"]]);

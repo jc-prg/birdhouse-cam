@@ -171,7 +171,7 @@ def set_log_directory():
     set logging directory and try to create if it doesn't exist
     """
     global birdhouse_main_directories, birdhouse_env, birdhouse_log_as_file, \
-        birdhouse_log_directory, birdhouse_log_filename
+        birdhouse_log_directory, birdhouse_log_filename, birdhouse_error_log_filename
 
     if birdhouse_env["dir_logging"] != "" and birdhouse_env["dir_logging"][0:1] == "/":
         birdhouse_log_directory = birdhouse_env["dir_logging"]
@@ -194,6 +194,7 @@ def set_log_directory():
         birdhouse_log_as_file = False
 
     birdhouse_log_filename = str(os.path.join(birdhouse_log_directory, "server.log"))
+    birdhouse_error_log_filename = str(os.path.join(birdhouse_log_directory, "server.error.log"))
 
 
 def set_loglevel():
@@ -490,6 +491,7 @@ logger_exists = {}
 birdhouse_log_as_file = False
 birdhouse_log_directory = ""
 birdhouse_log_filename = ""
+birdhouse_error_log_filename = ""
 birdhouse_log_format = logging.Formatter(fmt='%(asctime)s | %(levelname)-8s %(name)-10s | %(message)s',
                                          datefmt='%m/%d %H:%M:%S')
 
