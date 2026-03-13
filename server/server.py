@@ -36,8 +36,8 @@ from modules.statistics import BirdhouseStatistics
 import faulthandler
 faulthandler.enable()
 
-api_description = {"name": "BirdhouseCAM", "version": "v1.8.1"}
-app_framework = "v1.8.1"
+api_description = {"name": "BirdhouseCAM", "version": "v1.8.2"}
+app_framework = "v1.8.2"
 
 
 def on_exit(signum, handler):

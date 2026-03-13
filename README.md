@@ -1,4 +1,4 @@
-# Birdhouse Camera v1.8.1
+# Birdhouse Camera v1.8.2
 
 Raspberry Pi project to observe a birdhouse with one or two cameras: live stream, record images, 
 detect activity, detect birds, record videos, mark favorites, analyze weather data, 
@@ -10,7 +10,6 @@ app in English and German, ...
 4. [Used Technology](#used-technology)
 5. [Main Software Features](#main-software-features)
 6. [Installation](#installation)
-   * [Getting sources](#getting-sources)
    * [Software installation](#software-installation)
    * [First run and device configuration](#first-run-and-device-configuration)
    * [Finalize database setup](#finalize-database-setup)
@@ -119,30 +118,29 @@ In addition, do some research to find out where in your environment the birdhous
 ## Installation
 
 * Build a birdhouse incl. a Raspberry Pi or USB Camera inside the birdhouse (additional cameras and sensors are optional)
-* Prepare a Raspberry Pi 3B or newer
+* Prepare a Raspberry Pi (see [performance recommendations](#server-performance-recommendations) to decide for a model)
   * Install a fresh image on an SDCard (https://www.raspberrypi.com/software/)
-  * Recommended OS (due to restrictions: PyTorch require 64bit, picamera doesn't support 64bit any more, 
-    and picamera2 + libcamera doesn't work in docker container yet (requires Raspbian OS 64bit > bullseye)) 
+  * Recommended OS:
     * Raspbian OS Lite 64bit for **object detection** using YOLOv8
-    * Raspbian OS Lite 32bit if you want to use a **PiCamera** and the Docker version 
-      
+    * Raspbian OS Lite 32bit if you want to use a **PiCamera** and the Docker version  
   * Install git: ```sudo apt-get install git```
-  * _Optional:_ Install v4l2-ctl: ```sudo apt-get install v4l-utils```
-  * Create and move to your project directory, e.g., /projects/test/ or /projects/prod/ 
+  * _Optional:_ Install v4l2-ctl: ```sudo apt-get install v4l-utils``` (see [helping stuff](#helping-stuff))
+  * Create a project directory and move there (tested for /projects/test/ and /projects/prod/) 
+* Get birdhouse-cam sources
+    ```bash 
+    git clone http://github.com/jc-prg/birdhouse-cam.git
+    cd birdhouse-cam
+    git submodule update --init --recursive
+    ```
 * Choose one of the installation procedures below depending on your needs 
 * Connect cameras (and optional devices) with the Raspberry, start and enjoy
+
+_OS RESTRICTIONS: PyTorch requires 64bit, picamera doesn't support 64bit any more,
+and picamera2 + libcamera doesn't work in docker container yet (requires Raspbian OS 64bit > bullseye)_
 
 _NOTE: For an upgrade of an existing older version it might be required
 to rename (or remove) the files 'data/config.json' and '.env' and restart after the update. 
 Then change the new default configuration to your needs ..._
-
-### Getting sources
-
-```bash 
-git clone http://github.com/jc-prg/birdhouse-cam.git
-cd birdhouse-cam
-git submodule update --init --recursive
-```
 
 ### Software installation
 
