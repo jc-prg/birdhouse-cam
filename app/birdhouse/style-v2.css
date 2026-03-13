@@ -26,7 +26,7 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
 }
 
-.header {
+.app-header {
     z-index: 300;
     padding-top: calc(env(safe-area-inset-top) + 10px);
     background: var(--app-background);

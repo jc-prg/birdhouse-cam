@@ -78,8 +78,10 @@
 
 .setting_bg.header {
     position        : fixed;
-    width           : calc(100% - 36px);
-    background: unset;
+    width           : calc(100% - 20px);
+    background-color: var(--setting-bg-background);
+    border          : unset;
+    opacity         : 0.9;
 
     display         : none;
     justify-content : center;
@@ -87,10 +89,18 @@
     z-index         : 89;
     }
 
+/* reduce width if menu is shown */
+@media (min-width: 890px) {
+
+    .setting_bg         { width: calc(100% - 191px); }
+    .setting_bg.header  { width: calc(100% - 175px); margin-left: -4px;}
+}
+
+
 .setting_bg.header.empty {
     background-color: unset;
     border          : 0px;
-    min-height      : 44px;
+    min-height      : 40px;
     position        : unset;
     justify-content : center;
     align-items     : center;
@@ -140,21 +150,6 @@
     margin-bottom   : 12px;
     border          : 1px solid var(--setting-bg-line);
     }
-
-
-/* SETTING FRAMES SIZE -------------------------------------------------------------------- */
-
-.setting_bg.header {
-    width: calc(100% - 36px);
-}
-
-/* reduce width if menu is shown */
-@media (min-width: 890px) {
-
-    .setting_bg         { width: calc(100% - 191px); }
-    .setting_bg.header  { width: calc(100% - 191px); }
-}
-
 
 /* SETTING BUTTONS #1 ---------------------------------------------------------------------- */
 
