@@ -885,14 +885,14 @@ class BirdhouseStatus {
                 if (status === "in progress") {
                     setTextById("loading_status_"+views[i], progress);
                     setTextById("processing_"+views[i]+"_view", progress);
-                    app_active_processes["processing_"+views[i]+"_view"] = true;
+                    this.app_active_processes["processing_"+views[i]+"_view"] = true;
                 }
                 else if (status === "started") {
                     setTextById("loading_status_"+views[i], lang("WAITING"));
 
                     if (views[i] !== "object" || data["STATUS"]["object_detection"]["active"]) {
                         setTextById("processing_"+views[i]+"_view", lang("WAITING"));
-                        app_active_processes["processing_"+views[i]+"_view"] = true;
+                        this.app_active_processes["processing_"+views[i]+"_view"] = true;
                     }
                 }
                 else if (status === "done") {
