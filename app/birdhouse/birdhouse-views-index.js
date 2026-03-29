@@ -113,6 +113,7 @@ index_template["single"] = `
         </div>
         </center>
     </div>
+    <!--ACTIVE_BROOD-->
 ` + index_fullscreen_image;
 
 index_template["single_admin"] = `
@@ -311,6 +312,7 @@ index_template["default"] = `
             </div>
         </center>
     </div>
+    <!--ACTIVE_BROOD-->
 `
 
 index_template["default_admin"] = `

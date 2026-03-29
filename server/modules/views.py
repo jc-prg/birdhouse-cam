@@ -2239,10 +2239,12 @@ class BirdhouseViewDiary(BirdhouseClass):
 
         self.logging.info("4|"+str(active_stage))
 
-        for brood_id in active_stage:
-            self.logging.info("5|"+brood+"|"+str(active_stage[brood_id]))
+        brood_return = {}
 
-            if active_stage[brood_id] and not active_stage[brood]["ended"]:
+        for brood_id in active_stage:
+            self.logging.info("5|"+brood_id+"|"+str(active_stage[brood_id]))
+
+            if active_stage[brood_id] and not active_stage[brood_id]["ended"]:
                 start_date_obj = datetime.strptime(active_stage[brood_id]["start_date"], "%Y%m%d")
                 today_date_obj = datetime.strptime(today, "%Y%m%d")
                 days_since_start = (today_date_obj - start_date_obj).days
@@ -2252,14 +2254,16 @@ class BirdhouseViewDiary(BirdhouseClass):
                 else:
                     brood = {"title": "UNKNOWN", "bird": "BIRD", "comment": ""}
 
-                return {
+
+                brood_return = {
                     "stage": active_stage[brood_id]["type"],
                     "brood": active_stage[brood_id]["brood"],
                     "brood_details": brood,
                     "days_since_start": days_since_start
                 }
 
-        return None  # No stage is currently active
+        return brood_return
+        #return None  # No stage is currently active
 
     def get_current_state(self):
         """
